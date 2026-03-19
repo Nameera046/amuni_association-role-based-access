@@ -363,7 +363,7 @@ function DashboardShell() {
         .then(response => response.json())
         .then(coordinators => {
           setCoordinators(coordinators);
-          const isAdmin = email.toLowerCase().trim() === 'anithait@nec.edu.in';
+          const isAdmin = coordinators.some(c => c.email.toLowerCase().trim() === email.toLowerCase().trim()) || email.toLowerCase().trim() === 'anithait@nec.edu.in';
           setIsAdmin(isAdmin);
           localStorage.setItem('isAdmin', isAdmin.toString());
         })
@@ -408,8 +408,9 @@ function DashboardShell() {
         const response = await fetch(`${API_BASE_URL}/api/phases`);
         const data = await response.json();
         const details = {};
-        if (Array.isArray(data)) {
-          data.forEach(phase => {
+        const phasesArray = data.phases || data;
+        if (Array.isArray(phasesArray)) {
+          phasesArray.forEach(phase => {
             details[`Phase ${phase.phaseId}`] = phase.domains;
           });
         } else {
@@ -861,9 +862,9 @@ function DashboardShell() {
             {isAdmin && (
               <button
                 className="btn-primary"
-                onClick={() => navigate("/admin")}
+                onClick={() => navigate(`/12?email=${encodeURIComponent(btoa(userEmail))}`)}
               >
-                Admin Access
+                Webinar Coordinator Dashboard
               </button>
             )}
           </div>
@@ -906,7 +907,7 @@ function DashboardShell() {
                 Overall Report
               </button>
             )}
-            {(!isAdmin || userEmail === 'anithait@nec.edu.in') && (
+{(!isAdmin || coordinators.some(c => c.email === userEmail)) && (
               <select
                 className="phase-select"
                 value={selectedPhase}
@@ -926,7 +927,7 @@ function DashboardShell() {
             <div>
               <div>
                 <br></br>
-                {(!isAdmin || userEmail === 'anithait@nec.edu.in') && 
+{(!isAdmin || coordinators.some(c => c.email === userEmail)) && 
                 (
                   <div className="webinar-subtitle">
                     {phaseLoading ? 'Loading current phase...' : `Current Phase: ${currentPhase}`}
@@ -1084,7 +1085,7 @@ function DashboardShell() {
         alert("Please log in first");
         return;
       }
-      navigate(`/student-request/${btoa(userEmail)}`);
+      navigate(`/2?email=${encodeURIComponent(btoa(userEmail))}`);
     }} style={{ cursor: "pointer" }}>
         <div className="qa-icon">📄</div>
         <h4 className="qa-heading">Student Request Form</h4>
@@ -1099,7 +1100,7 @@ function DashboardShell() {
         alert("Please log in first");
         return;
       }
-      navigate(`/webinar-events/${btoa(userEmail)}`);
+      navigate(`/4?email=${encodeURIComponent(btoa(userEmail))}`);
     }} style={{ cursor: "pointer" }}>
         <div className="qa-icon">👩🏼‍🎓</div>
         <h4 className="qa-heading">Webinar Events</h4>
@@ -1114,7 +1115,7 @@ function DashboardShell() {
         alert("Please log in first");
         return;
       }
-      navigate(`/speaker-assignment/${btoa(userEmail)}`);
+      navigate(`/3?email=${encodeURIComponent(btoa(userEmail))}`);
     }} style={{ cursor: "pointer" }}>
       <div className="qa-icon">🧑‍🏫</div>
       <h4 className="qa-heading">Speaker Assignment Form</h4>
@@ -1130,7 +1131,7 @@ function DashboardShell() {
         alert("Please log in first");
         return;
       }
-      navigate(`/requested-topic-approval/${btoa(userEmail)}`);
+      navigate(`/9?email=${encodeURIComponent(btoa(userEmail))}`);
     }} style={{ cursor: "pointer" }}>
         <div className="qa-icon">✅</div>
         <h4 className="qa-heading">Requested Topic Approval</h4>
@@ -1146,7 +1147,7 @@ function DashboardShell() {
         alert("Please log in first");
         return;
       }
-      navigate(`/alumni-feedback/${btoa(userEmail)}`);
+      navigate(`/8?email=${encodeURIComponent(btoa(userEmail))}`);
     }} style={{ cursor: "pointer" }}>
         <div className="qa-icon">🏫</div>
         <h4 className="qa-heading">Alumni Feedback Form</h4>

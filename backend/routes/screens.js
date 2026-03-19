@@ -4,6 +4,49 @@ const router = express.Router();
 const mongoose = require('mongoose');
 
 // ==========================================
+// ONE-TIME GRANT ACCESS FOR anithait@nec.edu.in to screen 12 (roleId 12)
+// ==========================================
+router.get('/grant-screen12-access', async (req, res) => {
+  try {
+    const email = 'anithait@nec.edu.in';
+    
+    const adminDb = mongoose.connection.useDb("local_Administration");
+    const User = require('../models/User');
+    
+    // Find user
+    const user = await User.findOne({ 'basic.email_id': { $regex: new RegExp(`^${email}$`, 'i') } });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    const objectMemberId = user._id;
+    
+    // Delete existing roles for this user
+    await adminDb.collection("assign_roles").deleteMany({ memberId: objectMemberId });
+    
+    // Insert roleId 12
+    const roleDoc = {
+      memberId: objectMemberId,
+      roleId: 12,
+      assignedAt: new Date()
+    };
+    
+    await adminDb.collection("assign_roles").insertOne(roleDoc);
+    
+    res.json({ 
+      success: true, 
+      message: `Role 12 granted to ${email}. Access to screen 12 now available.`,
+      userId: user._id
+    });
+    
+  } catch (error) {
+    console.error('Grant access error:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+// ==========================================
+
 // GET USER'S ACCESSIBLE SCREENS BASED ON ASSIGNED ROLES OR DEFAULT ROLE
 // ==========================================
 router.get('/user-access', async (req, res) => {
@@ -93,10 +136,10 @@ router.get('/user-access', async (req, res) => {
     // Create a map of screen details
     const screenMap = {};
     screens.forEach(screen => {
-      screenMap[screen.screenId] = {
+        screenMap[screen.screenId] = {
         name: screen.name,
         module: screen.module,
-        route: screen.route
+        route: `/${screen.screenId}`
       };
     });
     

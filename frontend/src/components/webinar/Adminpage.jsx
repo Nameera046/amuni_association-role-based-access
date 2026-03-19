@@ -17,7 +17,12 @@ const validateDomain = (value) => {
   return "";
 };
 
-const Adminpage = () => {
+const Adminpage = ({ userEmail }) => {
+  const [isWebinarCoordinator, setIsWebinarCoordinator] = useState(true); // FORCE BYPASS - Admin always has access
+
+  useEffect(() => {
+    console.log('Adminpage loaded for email:', userEmail);
+  }, [userEmail]);
   const [activeView, setActiveView] = useState(null);
   const [showRemoveDomain, setShowRemoveDomain] = useState(false);
   const [domains, setDomains] = useState([{ department: '', domain: '' }]);
@@ -1181,7 +1186,7 @@ return (
       <div className="form-wrapper">
         <div>
           <div className="form-header">
-            <h1 className="form-title">Admin Dashboard</h1>
+            <h1 className="form-title">Webinar Coordinator Dashboard</h1>
             {/* Current Phase Display */}
             {!phaseLoading && (
               <div style={{

@@ -201,7 +201,11 @@ app.use('/api/auth/placement', authPlacementRoutes);
 app.use('/api/admin', adminRoutes);
 
 // ========== WEBINAR API ENDPOINTS ==========
+app.use("/api/screens", require("./routes/screens"));
+app.use("/api/user-access", require("./routes/screens")); // Mount screens.user-access
+
 app.use("/api", require("./routes/api"));
+
 // API endpoint to get email suggestions
 app.get('/api/emails', async (req, res) => {
   try {

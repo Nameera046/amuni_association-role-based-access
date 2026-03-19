@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { ROLE_SCREEN_MAP, getScreenIdByName } from '../../utils/screenMap';
+
 
 const AdminDashboard = () => {
   const [email, setEmail] = useState("");
@@ -8,17 +11,18 @@ const AdminDashboard = () => {
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ==================================
-  // Fixed Roles with Required IDs
+// ==================================
+  // Dynamic Roles from screenMap
   // ==================================
   useEffect(() => {
-    setRoles([
-      { roleId: 3, name: "Webinar Coordinator" },
-      { roleId: 2, name: "Student Coordinator" },
-      { roleId: 9, name: "Placement Coordinator" },
-      { roleId: 7, name: "Mentorship Coordinator" }
-    ]);
+    const dynamicRoles = Object.entries(ROLE_SCREEN_MAP).map(([roleIdStr, screenName]) => ({
+      roleId: parseInt(roleIdStr),
+      name: screenName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') + ' Screen',
+      screenName: screenName
+    }));
+    setRoles(dynamicRoles);
   }, []);
+
 
   // ==================================
   // Check Member
@@ -209,6 +213,28 @@ const AdminDashboard = () => {
                   />
                   <span style={{ fontSize: "16px" }}>{role.name}</span>
                 </label>
+                {role.screenName && (
+                  <button
+                    onClick={() => {
+                      const encodedEmail = encodeURIComponent(email);
+                      const screenId = getScreenIdByName(role.screenName);
+                      navigate(`/alumnimain/${screenId}?email=${encodedEmail}`);
+                    }}
+                    style={{
+                      marginLeft: "10px",
+                      padding: "4px 12px",
+                      backgroundColor: "#007bff",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Open Screen
+                  </button>
+                )}
+
               </div>
             ))}
           </div>

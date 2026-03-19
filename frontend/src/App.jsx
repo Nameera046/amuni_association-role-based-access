@@ -41,11 +41,14 @@ import ProgramFeedbackForm from './components/mentorship/Feedback';
 import Dashboard from './components/mentorship/Dashboard';
 import ScheduledDashboard from './components/mentorship/ScheduledDashboard';
 import LoginPage1 from './components/mentorship/LoginPage';
-import MentorshipAdminDashboard from './components/mentorship/AdminDashboard'; // 👈 Changed name
+import MentorshipAdminDashboard from './components/mentorship/AdminDashboard';
 import MentorshipDashboard from './components/mentorship/MentorshipDashboard';
 
 // Local Administration
 import LocalAdminDashboard from './components/local_administration/AdminDashboard';
+
+// Role-based dynamic screen
+import DynamicScreen from './components/DynamicScreen';
 
 function App() {
   return (
@@ -54,9 +57,12 @@ function App() {
         {/* Home */}
         <Route path="/" element={<Home />} />
         
-        {/* ===== PLACEMENT ROUTES ===== */}
+        {/* Dynamic screen IDs - handles all webinar screens via screenId */}
+        <Route path="/:screenId" element={<DynamicScreen />} />
+        
+        {/* PLACEMENT - unchanged */}
         <Route path="/placement-dashboard" element={<PlacementDashboard />} />
-        <Route path="/placement/admin-dashboard" element={<PlacementAdminDashboard />} /> {/* 👈 Updated */}
+        <Route path="/placement/admin-dashboard" element={<PlacementAdminDashboard />} />
         <Route path="/placement/assigned-companies" element={<AssignedCompanies />} />
         <Route path="/placement/company-registration" element={<CompanyRegistrationForm />} />
         <Route path="/placement/companies" element={<Companies />} />
@@ -68,35 +74,20 @@ function App() {
         <Route path="/placement/alumni-feedback-display" element={<AlumniFeedbackDisplay />} />
         <Route path="/placement/job-requests-display" element={<AlumniJobRequestsDisplay />} />
         
-        {/* ===== WEBINAR ROUTES ===== */}
-        <Route path="/webinar-dashboard" element={<WebinarDashboard />} />
-        <Route path="/student-request/:email" element={<StudentRequestForm />} />
-        <Route path="/speaker-assignment/:email" element={<WebinarSpeakerAssignmentForm />} />
-        <Route path="/webinar-events/:email" element={<WebinarEvents />} />
-        <Route path="/webinar-details/:id/:encodedUserEmail" element={<WebinarDetails />} />
-        <Route path="/webinar-details-upload/:id/:encodedUserEmail" element={<WebinarCompletedDetailsForm />} />
-        <Route path="/alumni-feedback/:email" element={<WebinarAlumniFeedbackForm />} />
-        <Route path="/student-feedback" element={<WebinarStudentFeedbackForm />} />
-        <Route path="/requested-topic-approval/:email" element={<TopicApprovalForm />} />
-        <Route path="/webinar-circular" element={<WebinarCircular />} />
-        <Route path="/student-certificate/:webinarId" element={<WebinarCertificate />} />
-        <Route path="/admin" element={<Adminpage />} />
-        <Route path="/login" element={<LoginPage />} />
-        
-        {/* ===== MENTORSHIP ROUTES ===== */}
+        {/* MENTORSHIP - unchanged */}
         <Route path="/login1" element={<LoginPage1 />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/menteeregistration" element={<MenteeRegistration />} />
         <Route path="/mentorregistration" element={<MentorRegistration />} />
-        <Route path="/menteementor_assign" element={<MenteeMentorAssignment/>} />
-        <Route path="/mentor_scheduling" element={<MentorshipSchedulingForm/>} />
-        <Route path="/meeting_updatation" element={<MeetingStatusUpdateForm/>} />
-        <Route path="/program_feedback" element={<ProgramFeedbackForm/>} />                          
-        <Route path="/scheduled_dashboard" element={<ScheduledDashboard/>} />               
-        <Route path="/admin_dashboard" element={<MentorshipAdminDashboard />} /> {/* 👈 Updated */}
-        <Route path="/co-ordinator" element={<MentorshipDashboard/>} />
+        <Route path="/menteementor_assign" element={<MenteeMentorAssignment />} />
+        <Route path="/mentor_scheduling" element={<MentorshipSchedulingForm />} />
+        <Route path="/meeting_updatation" element={<MeetingStatusUpdateForm />} />
+        <Route path="/program_feedback" element={<ProgramFeedbackForm />} />
+        <Route path="/scheduled_dashboard" element={<ScheduledDashboard />} />
+        <Route path="/admin_dashboard" element={<MentorshipAdminDashboard />} />
+        <Route path="/co-ordinator" element={<MentorshipDashboard />} />
         
-        {/* ===== LOCAL ADMINISTRATION ===== */}
+        {/* LOCAL ADMIN - unchanged */}
         <Route path="/local-admin" element={<LocalAdminDashboard />} />
         <Route path="/local-admin-dashboard" element={<LocalAdminDashboard />} />
       </Routes>
@@ -105,3 +96,4 @@ function App() {
 }
 
 export default App;
+

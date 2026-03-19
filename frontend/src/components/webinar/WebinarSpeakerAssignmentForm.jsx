@@ -337,9 +337,7 @@ export default function WebinarSpeakerAssignmentForm() {
 
       <div className="form-wrapper">
         <div >
-          <button className="back-btn" onClick={() => navigate("/webinar-dashboard")}>
-            <ArrowLeft className="back-btn-icon" /> Back to Dashboard
-          </button>
+          <button className="back-btn" onClick={() => navigate("/webinar-dashboard")}>\n            <ArrowLeft className="back-btn-icon" /> Back to Dashboard\n          </button>
           <div className="form-header">
             <div className="icon-wrapper">
               <Building2 className="header-icon" />

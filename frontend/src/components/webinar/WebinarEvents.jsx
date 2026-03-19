@@ -684,7 +684,7 @@ export default function WebinarEvents() {
     const isWithinOneWeek = webinar.deadline && (new Date(webinar.deadline) - new Date()) <= (7 * 24 * 60 * 60 * 1000) && (new Date(webinar.deadline) - new Date()) > 0;
     const isFeedbackEnabled = webinar.webinarDate && new Date() > new Date(new Date(webinar.webinarDate).getTime() + 24 * 60 * 60 * 1000);
     const isCertificateEnabled = webinar.attendedCount > 0;
-    const isCoordinator = coordinators.some(coord => coord.email === userEmail) || userEmail === 'anithait@nec.edu.in';
+    const isCoordinator = coordinators.some(coord => coord.email === userEmail);
     const canUpload = isCoordinator || isAdmin;
 
     console.log('Rendering WebinarCard for webinar:', webinar.title, 'userEmail:', userEmail, 'isCoordinator:', isCoordinator, 'isAdmin:', isAdmin, 'canUpload:', canUpload);
@@ -960,9 +960,7 @@ export default function WebinarEvents() {
       {/* Main Container */}
       <div className="form-wrapper">
         <div>
-            <button className="back-btn" onClick={() => navigate("/webinar-dashboard")}>
-              <ArrowLeft className="back-btn-icon" /> Back to Dashboard
-            </button>
+          <button className="back-btn" onClick={() => navigate("/webinar-dashboard")}>\n            <ArrowLeft className="back-btn-icon" /> Back to Dashboard\n          </button>
           {/* Header */}
           <div className="form-header webinar-events-header">
             <div className="icon-wrapper">
@@ -1000,7 +998,7 @@ export default function WebinarEvents() {
                     <h2 className="text-2xl font-bold text-purple-900 webinar-section-title">
                       {month.charAt(0).toUpperCase() + month.slice(1)} 2025
                     </h2>
-                    {userEmail === 'anithait@nec.edu.in' && (
+                    {(isCoordinator || isAdmin) && (
                       <button className="generate-btn" onClick={() => generateCircular(month)}>Generate Circular</button>
                     )}
                   </div>

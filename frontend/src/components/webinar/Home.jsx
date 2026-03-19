@@ -141,19 +141,17 @@ const AlumniDashboard = () => {
     return encodeURIComponent(encrypted);
   };
 
-  // UPDATED: Navigation function WITHOUT alert
+// Role-based navigation - fallback to original paths
   const navigateWithEmail = (path) => {
     if (userEmail) {
-      // Log to console for debugging (optional)
       console.log('User email (decrypted):', userEmail);
-      
-      // Encrypt and navigate without showing alert
       const encryptedParam = getEncryptedEmailParam();
       navigate(`${path}?email=${encryptedParam}`);
     } else {
       window.location.reload();
     }
   };
+
 
   // Fetch phases and current phase
   useEffect(() => {
@@ -651,7 +649,7 @@ const AlumniDashboard = () => {
             icon="🎓"
             title="Webinar Dashboard"
             description={`Manage webinar requests, speaker assignments, and topic approvals for ${currentPhase || 'current phase'}`}
-            onClick={() => navigateWithEmail('/webinar-dashboard')}
+            onClick={() => navigateWithEmail('/1')}
             stats={[
               { value: webinarStats.totalPlanned, label: 'Total Planned' },
               { value: webinarStats.totalConducted, label: 'Total Conducted' },
