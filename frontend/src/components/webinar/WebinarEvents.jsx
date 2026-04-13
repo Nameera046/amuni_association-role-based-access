@@ -68,7 +68,8 @@ export default function WebinarEvents() {
   const [userEmail, setUserEmail] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [coordinators, setCoordinators] = useState([]);
-  const [userLoading, setUserLoading] = useState(true);
+const [userLoading, setUserLoading] = useState(true);
+  const [isCoordinator, setIsCoordinator] = useState(false);
 
   const formatTimeWithAMPM = (timeString) => {
     if (!timeString) return 'TBD';
@@ -669,6 +670,14 @@ export default function WebinarEvents() {
     fetchUserInfo();
     fetchCoordinators();
   }, []);
+
+  // Compute isCoordinator status for parent component
+  useEffect(() => {
+    if (coordinators.length > 0 && userEmail) {
+      const coordinatorCheck = coordinators.some(coord => coord.email === userEmail);
+      setIsCoordinator(coordinatorCheck);
+    }
+  }, [coordinators, userEmail]);
 
   // Update registrationEmail when userEmail is set
   useEffect(() => {
