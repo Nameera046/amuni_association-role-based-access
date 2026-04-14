@@ -1,7 +1,7 @@
-import { Building2, Clock, Compass, Globe, Upload, Calendar, X ,User,ArrowLeft, MapPin} from 'lucide-react';
-import { useNavigate } from "react-router-dom";
+import { Building2, Clock, Compass, Globe, Upload, Calendar, X ,User, MapPin} from 'lucide-react';
 import React, { useState, useEffect, useRef } from "react";
 import './Common.css';
+import './WebinarSpeakerAssignmentForm.css';
 import Popup from './Popup';
 
 // Add API base URL
@@ -18,7 +18,6 @@ const typeOptions = [
 ];
 
 export default function WebinarSpeakerAssignmentForm() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '', name: '', department: '', batch: '', designation: '', companyName: '', speakerPhoto: null, domain: '', topic: '', webinarVenue: '', alumniCity: '', webinarType: 'In Person', meetingLink: ''
   });
@@ -56,6 +55,17 @@ export default function WebinarSpeakerAssignmentForm() {
       return () => URL.revokeObjectURL(url);
     }
   }, [formData.speakerPhoto]);
+
+  // Keep scroll behavior, hide page scrollbar while this page is mounted
+  useEffect(() => {
+    document.body.classList.add('speaker-assignment-hide-scrollbar');
+    document.documentElement.classList.add('speaker-assignment-hide-scrollbar');
+
+    return () => {
+      document.body.classList.remove('speaker-assignment-hide-scrollbar');
+      document.documentElement.classList.remove('speaker-assignment-hide-scrollbar');
+    };
+  }, []);
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -327,7 +337,7 @@ export default function WebinarSpeakerAssignmentForm() {
   };
 
   return (
-    <div className="student-form-page">
+    <div className="student-form-page speaker-assignment-page">
       {/* Background Orbs */}
       <div className="background-orbs">
         <div className="orb orb-purple"></div>
@@ -337,7 +347,6 @@ export default function WebinarSpeakerAssignmentForm() {
 
       <div className="form-wrapper">
         <div >
-          <button className="back-btn" onClick={() => navigate("/webinar-dashboard")}>\n            <ArrowLeft className="back-btn-icon" /> Back to Dashboard\n          </button>
           <div className="form-header">
             <div className="icon-wrapper">
               <Building2 className="header-icon" />
@@ -623,7 +632,6 @@ export default function WebinarSpeakerAssignmentForm() {
             </div>
           </div>
 
-          <p className="form-footer">Designed with 💜 for Alumni Network</p>
 
           {showPoster && (
             <div className="mt-8 flex justify-center">

@@ -18,7 +18,8 @@ export default function WebinarPoster({
   alumniCompany,
   alumniCity,
   alumniBatch,
-  alumniDepartment
+  alumniDepartment,
+  desktopPreview = false
 }) {
 
   // ---------- FUNCTION TO GET WEEKDAY ----------
@@ -39,7 +40,7 @@ export default function WebinarPoster({
   const dayName = getDayFromDate(webinarDate);
 
   return (
-    <div className="webinar-poster w-[900px] h-[1200px] mx-auto bg-[#06204A] relative text-white overflow-hidden shadow-2xl rounded-xl">
+    <div className={`webinar-poster w-[900px] h-[1200px] mx-auto bg-[#06204A] relative text-white overflow-hidden shadow-2xl rounded-xl ${desktopPreview ? 'desktop-preview' : ''}`}>
 
       {/* -------------------- TOP HEADER -------------------- */}
       <div className="text-center pt-6">

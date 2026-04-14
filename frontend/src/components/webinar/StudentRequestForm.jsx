@@ -6,11 +6,10 @@ import {
   Mail,
   Phone,
   GraduationCap,
-  MessageSquare,
-  ArrowLeft
+  MessageSquare
 } from 'lucide-react';
 
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Popup from './Popup';
 import './Common.css';
 
@@ -18,7 +17,6 @@ import './Common.css';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function StudentRequestForm() {
-  const navigate = useNavigate();
   const { email: encodedEmail } = useParams();
 
   const [formData, setFormData] = useState({
@@ -29,8 +27,7 @@ export default function StudentRequestForm() {
     domain: '',
     topic: '',
     reason: '',
-    phaseId: null,
-    isRobot: false
+    phaseId: null
   });
 
   const [errors, setErrors] = useState({});
@@ -178,11 +175,6 @@ export default function StudentRequestForm() {
   const handleSubmit = async () => {
     const newErrors = {};
 
-    if (!formData.isRobot) {
-      setPopup({ show: true, message: 'Please verify that you are not a robot', type: 'error' });
-      return;
-    }
-
     if (!formData.name) newErrors.name = 'Name is required';
     if (!formData.email) newErrors.email = 'Email is required';
     if (!formData.department) newErrors.department = 'Department is required';
@@ -224,8 +216,7 @@ export default function StudentRequestForm() {
             domain: '',
             topic: '',
             reason: '',
-            phaseId: null,
-            isRobot: false
+            phaseId: null
           });
           setErrors({});
         } else {
@@ -249,11 +240,6 @@ export default function StudentRequestForm() {
 
       <div className="form-wrapper">
         <div >
-
-          <button className="back-btn" onClick={() => navigate("/webinar-dashboard")}>
-            <ArrowLeft className="back-btn-icon" /> <span className="back-btn-text">Back to Dashboard</span>
-          </button>
-
           <div className="form-header">
             <div className="icon-wrapper">
               <GraduationCap className="header-icon" />
@@ -389,18 +375,6 @@ export default function StudentRequestForm() {
                 {errors.reason && <div className="error-text">{errors.reason}</div>}
               </div>
 
-              {/* CAPTCHA */}
-              <div className="checkbox-group">
-                <input
-                  type="checkbox"
-                  name="isRobot"
-                  checked={formData.isRobot}
-                  onChange={handleChange}
-                  className="checkbox-field"
-                />
-                <label className="checkbox-label">I'm not a robot</label>
-              </div>
-
               {/* SUBMIT */}
               <button onClick={handleSubmit} className="submit-btn">
                 Submit
@@ -409,7 +383,6 @@ export default function StudentRequestForm() {
             </div>
           </div>
 
-          <p className="form-footer">Designed with 💜 for Alumni Network</p>
 
         </div>
       </div>

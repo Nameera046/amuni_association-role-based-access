@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, ArrowLeft, Eye, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { useNavigate } from "react-router-dom";
+import { CheckCircle, Eye, X, ChevronDown, ChevronUp } from 'lucide-react';
 import stringSimilarity from 'string-similarity';
 import Popup from './Popup';
 import './Common.css';
+import './TopicApprovalForm.css';
 import '../WebinarDashboard.css';
 
 // API Base URL from environment variable
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function TopicApprovalForm() {
-  const navigate = useNavigate();
   const [selectedPhase, setSelectedPhase] = useState('');
   const [isPhaseDropdownOpen, setIsPhaseDropdownOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -154,10 +153,6 @@ export default function TopicApprovalForm() {
     <div className="student-form-page">
       <div className="form-wrapper">
         <div>
-          <button className="back-btn" onClick={() => navigate("/1")}>
-            <ArrowLeft className="back-btn-icon" /> Back to Dashboard
-          </button>
-
           <div className="form-header">
             <div className="icon-wrapper">
               <CheckCircle className="header-icon" />
@@ -166,7 +161,7 @@ export default function TopicApprovalForm() {
           </div>
 
           {/* Phase Dropdown */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem',marginRight:'10.5rem' }}>
+          <div className="topic-phase-row" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem', marginRight: '10.5rem' }}>
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <select
                 value={selectedPhase}
@@ -206,7 +201,7 @@ export default function TopicApprovalForm() {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto rounded-lg" style={{ maxWidth: '80%', margin: '0 auto' }}>
+          <div className="overflow-x-auto rounded-lg topic-approval-scroll-wrap" style={{ maxWidth: '80%', margin: '0 auto' }}>
             <table className="w-full topic-approval-table" style={{ borderCollapse: 'separate', borderSpacing: 0, tableLayout: 'fixed', backgroundColor: 'transparent', fontSize: '1.1rem' }}>
               <thead className="bg-gradient-to-r from-purple-600 to-blue-500">
                 <tr>
@@ -218,13 +213,23 @@ export default function TopicApprovalForm() {
                   <th className="px-6 py-5 text-center text-2xl font-semibold text-white uppercase tracking-wide" style={{ width: '17%' }}>DETAILS</th>
                 </tr>
               </thead>
-              <br></br>
               <tbody style={{ backgroundColor: 'transparent' }}>
                 {topics.map((item, index) => (
                    
                   <tr key={index} className="hover:bg-purple-50 transition-colors " style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: 'transparent', marginBottom: '0.5rem', display: 'table-row' }}>
                     <td className="px-6 py-6  text-2xl font-medium text-gray-900" style={{ width: '25%' ,}}>{item.domain} </td>
-                    <td className="px-6 py-6 text-2xl text-gray-700" style={{ width: '18%' }}>{item.topic}</td>
+                  <td 
+  className="px-6 py-6 text-2xl text-gray-700" 
+  style={{ 
+    width: '18%',
+    maxWidth: '180px',
+    whiteSpace: 'normal',        /* allow wrapping */
+    wordBreak: 'break-word',
+    verticalAlign: 'top'         /* align to top when row grows tall */
+  }}
+>
+  {item.topic}
+</td>
                     <td className="px-6 py-6 text-2xl font-semibold text-center text-gray-900" style={{ width: '12%' }}>{item.totalRequested}</td>
                     <td className="px-6 py-6 text-center" style={{ width: '12%' }}>
                       <span
@@ -241,13 +246,14 @@ export default function TopicApprovalForm() {
                       <button
                         onClick={() => handleApprove(index)}
                         disabled={item.status === "Approved"}
+                        style={item.status === "Approved" ? { color: '#111111' } : undefined}
                         className={`inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white transition-all whitespace-nowrap ${
                           item.status === "Approved"
-                            ? "bg-gray-400 cursor-not-allowed"
+                            ? "bg-gray-300 border-gray-400 text-gray-800 opacity-100 cursor-not-allowed"
                             : "bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600"
                         }`}
                       >
-                        ✓ Approve
+                        {item.status === "Approved" ? "✓ Approved" : "✓ Approve"}
                       </button>
                     </td>
                     <td className="px-6 py-6 text-center" style={{ width: '17%' }}>

@@ -663,7 +663,7 @@ const Adminpage = ({ userEmail }) => {
                 <div className="error-text">{errors.endingDate}</div>
               )}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div className="admin-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 style={{ fontWeight: "bold" , fontSize: '20px', margin: 0 }}>Domain Details</h2>
               {lastPhaseDomains.length > 0 && (
                 <button
@@ -680,7 +680,7 @@ const Adminpage = ({ userEmail }) => {
               )}
             </div>
             {domains.map((domain, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem', gap: '1rem' }}>
+                <div key={index} className="domain-row" style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem', gap: '1rem' }}>
                     <div className="form-group" style={{ flex: "0.5 1 0%" }}>
                       <label>Department</label>
                       <select
@@ -739,7 +739,7 @@ const Adminpage = ({ userEmail }) => {
                       <div className="error-text">{errors[`domain_${index}`]}</div>
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', marginTop: '1.5rem' }}>
+                  <div className="domain-row-action" style={{ display: 'flex', alignItems: 'center', marginTop: '1.5rem' }}>
                     <button
                       className="submit1-btn"
                       onClick={() => {
@@ -797,7 +797,7 @@ const Adminpage = ({ userEmail }) => {
      case 'webinar':
         return (
           <div className="form-card filter-card">
-            <div className="filters">
+            <div className="filters webinar-filters">
               <select
                 className="input-field"
                 value={selectedFilters.phaseId}
@@ -846,15 +846,15 @@ const Adminpage = ({ userEmail }) => {
                 ))}
               </select>
             </div>
-            <div style={{ overflowX: 'auto', width: '100%', marginTop: '1rem' }}>
-              <table style={{ minWidth: "1200px", borderCollapse: "collapse", tableLayout: "fixed" }}>
+            <div className="table-scroll-wrap webinar-table-desktop" style={{ overflowX: 'auto', width: '100%', marginTop: '1rem' }}>
+              <table className="admin-data-table webinar-table" style={{ minWidth: "1200px", borderCollapse: "collapse", tableLayout: "fixed" }}>
     <thead>
       <tr style={{ backgroundColor: "#eee", paddingTop: "15px", paddingBottom: "15px" }}>
         <th style={{ minWidth: "100px", padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Phase ID</th>
         <th style={{ minWidth: "150px", padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Domain</th>
         <th style={{ minWidth: "200px", padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Webinar Topic</th>
         <th style={{ minWidth: "150px", padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Speaker Name</th>
-        <th style={{ minWidth: "400px", padding: "10px", border: "1px solid #ddd", textAlign: "center", overflowX: "auto" }}>Speaker Email</th>
+        <th style={{ minWidth: "400px", padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Speaker Email</th>
         <th style={{ minWidth: "120px", padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Speaker Phone Number</th>
         <th style={{ minWidth: "150px", padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Speaker Batch & Dept</th>
         <th style={{ minWidth: "180px", padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Speaker Designation & Company</th>
@@ -882,7 +882,7 @@ const Adminpage = ({ userEmail }) => {
             <td style={{ padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>{webinar.domain}</td>
             <td style={{ padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>{webinar.topic}</td>
             <td style={{ padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>{webinar.speaker?.name || 'N/A'}</td>
-            <td style={{ padding: "10px", border: "1px solid #ddd", textAlign: "center", overflowX: "auto", whiteSpace: "nowrap" }}>{webinar.speaker?.email || 'N/A'}</td>
+            <td className="email-scroll-cell" style={{ padding: "10px", border: "1px solid #ddd", textAlign: "center", overflowX: "auto", whiteSpace: "nowrap" }}>{webinar.speaker?.email || 'N/A'}</td>
             <td style={{ padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>{webinar.speaker?.phoneNumber || 'N/A'}</td>
             <td style={{ padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>
               {webinar.speaker?.batch ? `${webinar.speaker.batch} & ${webinar.speaker.department || 'N/A'}` : 'N/A'}
@@ -897,20 +897,42 @@ const Adminpage = ({ userEmail }) => {
     </tbody>
   </table>
         </div>
+
+        <div className="webinar-mobile-cards">
+          {webinarsLoading ? (
+            <div className="webinar-mobile-empty">Loading webinars...</div>
+          ) : filteredWebinars.length === 0 ? (
+            <div className="webinar-mobile-empty">No webinars found</div>
+          ) : (
+            filteredWebinars.map((webinar, index) => (
+              <div key={index} className="webinar-mobile-card">
+                <div><strong>Phase ID:</strong> {webinar.phaseId || 'N/A'}</div>
+                <div><strong>Domain:</strong> {webinar.domain || 'N/A'}</div>
+                <div><strong>Topic:</strong> {webinar.topic || 'N/A'}</div>
+                <div><strong>Speaker:</strong> {webinar.speaker?.name || 'N/A'}</div>
+                <div className="mobile-email"><strong>Email:</strong> {webinar.speaker?.email || 'N/A'}</div>
+                <div><strong>Phone:</strong> {webinar.speaker?.phoneNumber || 'N/A'}</div>
+                <div><strong>Batch & Dept:</strong> {webinar.speaker?.batch ? `${webinar.speaker.batch} & ${webinar.speaker.department || 'N/A'}` : 'N/A'}</div>
+                <div><strong>Designation & Company:</strong> {webinar.speaker?.designation ? `${webinar.speaker.designation} & ${webinar.speaker.companyName || 'N/A'}` : 'N/A'}</div>
+                <div><strong>City:</strong> {webinar.alumniCity || 'N/A'}</div>
+              </div>
+            ))
+          )}
+        </div>
           </div>
         );
       case 'coordiators':
         return (
           <div className="form-card">
             <h2 className="form-title" style={{ fontSize: '1.5rem', marginBottom: '1rem', textAlign: 'center' }}>Coordinators Management</h2>
-            <div className="admin-buttons" style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+            <div className="admin-buttons coord-switch-buttons" style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                 <button className={`submit1-btn ${activeCoordinatorView === 'student' ? 'active' : ''}`} onClick={() => { setActiveCoordinatorView('student'); setShowAddDepartmentForm(false); setShowAddStudentForm(false); }}>Student Coordinators</button>
                 <button className={`submit1-btn ${activeCoordinatorView === 'department' ? 'active' : ''}`} onClick={() => { setActiveCoordinatorView('department'); setShowAddStudentForm(false); setShowAddDepartmentForm(false); }}>Department Coordinators</button>
             </div>
             {activeCoordinatorView === 'student' && (
                 <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h3 style={{fontWeight: "bold" , fontSize: '30px' ,margin: 0}}>Student Coordinators</h3>
+                    <div className="coordinator-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3 className="coordinator-title" style={{fontWeight: "bold" , fontSize: '30px' ,margin: 0}}>Student Coordinators</h3>
                         <button className="submit2-btn" onClick={() => setShowAddStudentForm(!showAddStudentForm)}>Add Coordinator</button>
                     </div>
 
@@ -983,7 +1005,8 @@ const Adminpage = ({ userEmail }) => {
                         </div>
                     )}
 
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                    <div className="table-scroll-wrap coordinator-table-desktop">
+                    <table className="admin-data-table coordinator-table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
                         <thead>
                             <tr style={{ backgroundColor: '#eee' }}>
                                 <th style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>Student Name</th>
@@ -1026,13 +1049,37 @@ const Adminpage = ({ userEmail }) => {
                             )}
                         </tbody>
                     </table>
+                    </div>
+
+                    <div className="coordinator-mobile-cards">
+                      {coordinatorsLoading ? (
+                        <div className="coordinator-mobile-empty">Loading coordinators...</div>
+                      ) : coordinators.filter(coord => coord.role === 'student').length === 0 ? (
+                        <div className="coordinator-mobile-empty">No student coordinators found</div>
+                      ) : (
+                        coordinators.filter(coord => coord.role === 'student').map((coord, index) => (
+                          <div key={index} className="coordinator-mobile-card">
+                            <div><strong>Student Name:</strong> {coord.name || 'N/A'}</div>
+                            <div><strong>Email:</strong> {coord.email || 'N/A'}</div>
+                            <div><strong>Department:</strong> {coord.department || 'N/A'}</div>
+                            <div><strong>Phone Number:</strong> {coord.phoneNumber || 'N/A'}</div>
+                            <button
+                              className="coordinator-delete-btn"
+                              onClick={() => handleDeleteCoordinator(coord._id, coord.name)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
                 </div>
             )}
 
             {activeCoordinatorView === 'department' && (
                 <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h3 style={{fontWeight: "bold" , fontSize: '30px' ,margin: 0}}>Department Coordinators</h3>
+                    <div className="coordinator-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3 className="coordinator-title" style={{fontWeight: "bold" , fontSize: '30px' ,margin: 0}}>Department Coordinators</h3>
                         <button className="submit2-btn" onClick={() => setShowAddDepartmentForm(!showAddDepartmentForm)}>Add Coordinator</button>
                     </div>
 
@@ -1124,7 +1171,8 @@ const Adminpage = ({ userEmail }) => {
                         </div>
                     )}
 
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                    <div className="table-scroll-wrap coordinator-table-desktop">
+                    <table className="admin-data-table coordinator-table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
                         <thead>
                             <tr style={{ backgroundColor: '#eee' }}>
                                 <th style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>Faculty Name</th>
@@ -1167,6 +1215,30 @@ const Adminpage = ({ userEmail }) => {
                             )}
                         </tbody>
                     </table>
+                    </div>
+
+                    <div className="coordinator-mobile-cards">
+                      {coordinatorsLoading ? (
+                        <div className="coordinator-mobile-empty">Loading coordinators...</div>
+                      ) : coordinators.filter(coord => coord.role === 'department').length === 0 ? (
+                        <div className="coordinator-mobile-empty">No department coordinators found</div>
+                      ) : (
+                        coordinators.filter(coord => coord.role === 'department').map((coord, index) => (
+                          <div key={index} className="coordinator-mobile-card">
+                            <div><strong>Faculty Name:</strong> {coord.name || 'N/A'}</div>
+                            <div><strong>Email:</strong> {coord.email || 'N/A'}</div>
+                            <div><strong>Department:</strong> {coord.department || 'N/A'}</div>
+                            <div><strong>Phone Number:</strong> {coord.phoneNumber || 'N/A'}</div>
+                            <button
+                              className="coordinator-delete-btn"
+                              onClick={() => handleDeleteCoordinator(coord._id, coord.name)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
                 </div>
             )}
           </div>
@@ -1177,7 +1249,7 @@ const Adminpage = ({ userEmail }) => {
 };
 
 return (
-    <div className="student-form-page">
+    <div className="student-form-page admin-page-scroll">
       <div className="background-orbs">
         <div className="orb orb-purple"></div>
         <div className="orb orb-blue"></div>

@@ -1,8 +1,8 @@
 // ---------- FILE: WebinarDashboard.jsx ----------
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import './WebinarDashboard.css';
 // import './Adminpage';
 import './webinar/Common.css';
+import './WebinarDashboard.css';
 import { GraduationCap, ArrowLeft, MoreVertical, Users, Briefcase} from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, AlignmentType } from 'docx';
@@ -301,6 +301,17 @@ function DashboardShell() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Hide page scrollbar only while this dashboard is mounted
+  useEffect(() => {
+    document.body.classList.add('wb-hide-scrollbar');
+    document.documentElement.classList.add('wb-hide-scrollbar');
+
+    return () => {
+      document.body.classList.remove('wb-hide-scrollbar');
+      document.documentElement.classList.remove('wb-hide-scrollbar');
     };
   }, []);
 
@@ -870,35 +881,6 @@ function DashboardShell() {
           </div>
 
           <div className="header-right">
-            {/* ADDED: Three-dot menu */}
-            <div className="header-menu">
-              <button 
-                className="menu-button"
-                onClick={() => setShowDropdown(!showDropdown)}
-                aria-label="More options"
-              >
-                <MoreVertical size={24} />
-              </button>
-              {showDropdown && (
-                <div className="dropdown-menu">
-                  <button 
-                    className="dropdown-item"
-                    onClick={handleMentorshipClick}
-                  >
-                    <Users size={18} />
-                    <span>Mentorship</span>
-                  </button>
-                  <button 
-                    className="dropdown-item"
-                    onClick={handlePlacementClick}
-                  >
-                    <Briefcase size={18} />
-                    <span>Placement</span>
-                  </button>
-                </div>
-              )}
-            </div>
-            
             {isAdmin && (
               <button
                 className="btn-primary"
@@ -907,18 +889,48 @@ function DashboardShell() {
                 Overall Report
               </button>
             )}
-{(!isAdmin || coordinators.some(c => c.email === userEmail)) && (
-              <select
-                className="phase-select"
-                value={selectedPhase}
-                onChange={(e) => setSelectedPhase(e.target.value)}
-              >
-                {phases.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
+            {(!isAdmin || coordinators.some(c => c.email === userEmail)) && (
+              <div className="phase-menu-row">
+                <select
+                  className="phase-select"
+                  value={selectedPhase}
+                  onChange={(e) => setSelectedPhase(e.target.value)}
+                >
+                  {phases.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="header-menu">
+                  <button
+                    className="menu-button"
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    aria-label="More options"
+                  >
+                    <MoreVertical size={24} />
+                  </button>
+                  {showDropdown && (
+                    <div className="dropdown-menu">
+                      <button
+                        className="dropdown-item"
+                        onClick={handleMentorshipClick}
+                      >
+                        <Users size={18} />
+                        <span>Mentorship</span>
+                      </button>
+                      <button
+                        className="dropdown-item"
+                        onClick={handlePlacementClick}
+                      >
+                        <Briefcase size={18} />
+                        <span>Placement</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </header>

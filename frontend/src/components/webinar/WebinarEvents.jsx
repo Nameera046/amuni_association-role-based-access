@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Common.css';
+import './WebinarEvents.css';
 import { FiBookOpen, FiAward, FiEye, FiUpload } from "react-icons/fi";
-import { Mail, ArrowLeft } from "lucide-react";
+import { Mail } from "lucide-react";
 import Popup from './Popup';
 import WebinarCertificate, { downloadCertificatePDF } from './WebinarCertificate';
 import WebinarPoster from './WebinarPoster';
@@ -15,39 +16,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
 
 export default function WebinarEvents() {
   const navigate = useNavigate();
-  const posterContainerRef = useRef(null);
-  const [posterScale, setPosterScale] = useState({ scaleX: 0.253, scaleY: 0.29 });
   const [selectedWebinar, setSelectedWebinar] = useState(null);
-
-  // Calculate poster scale based on container width
-  useEffect(() => {
-    const updateScale = () => {
-      if (posterContainerRef.current) {
-        const containerWidth = posterContainerRef.current.offsetWidth;
-        const containerHeight = posterContainerRef.current.offsetHeight;
-        const posterWidth = 900; // Original poster width
-        const posterHeight = 1200; // Original poster height
-
-        const scaleX = containerWidth / posterWidth;
-        const scaleY = (containerHeight / posterHeight) * 1.5;
-
-        setPosterScale({ scaleX, scaleY });
-      }
-    };
-
-    updateScale();
-
-    const resizeObserver = new ResizeObserver(updateScale);
-    if (posterContainerRef.current) {
-      resizeObserver.observe(posterContainerRef.current);
-    }
-
-    return () => {
-      if (posterContainerRef.current) {
-        resizeObserver.unobserve(posterContainerRef.current);
-      }
-    };
-  }, []);
   const [popup, setPopup] = useState({ show: false, message: '', type: 'success' });
   const [webinars, setWebinars] = useState({});
   const [loading, setLoading] = useState(true);
@@ -68,9 +37,19 @@ export default function WebinarEvents() {
   const [userEmail, setUserEmail] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [coordinators, setCoordinators] = useState([]);
-const [userLoading, setUserLoading] = useState(true);
+  const [userLoading, setUserLoading] = useState(true);
   const [isCoordinator, setIsCoordinator] = useState(false);
 
+  // Keep page scroll but hide vertical scrollbar while this page is open
+  useEffect(() => {
+    document.body.classList.add('webinar-events-hide-scrollbar');
+    document.documentElement.classList.add('webinar-events-hide-scrollbar');
+
+    return () => {
+      document.body.classList.remove('webinar-events-hide-scrollbar');
+      document.documentElement.classList.remove('webinar-events-hide-scrollbar');
+    };
+  }, []);
   const formatTimeWithAMPM = (timeString) => {
     if (!timeString) return 'TBD';
 
@@ -687,7 +666,42 @@ const [userLoading, setUserLoading] = useState(true);
   }, [userEmail]);
 
   /** ------------------ Webinar Card ------------------ */
-  const WebinarCard = ({ webinar, posterScale, posterContainerRef }) => {
+  const WebinarCard = ({ webinar }) => {
+    const posterContainerRef = useRef(null);
+    const [posterScale, setPosterScale] = useState({ scaleX: 0.253, scaleY: 0.29 });
+
+    useEffect(() => {
+      const updateScale = () => {
+        const container = posterContainerRef.current;
+        if (!container) return;
+
+        const containerWidth = container.offsetWidth;
+        const containerHeight = container.offsetHeight;
+        const posterWidth = 900;
+        const posterHeight = 1200;
+
+        setPosterScale({
+          scaleX: containerWidth / posterWidth,
+          scaleY: containerHeight / posterHeight
+        });
+      };
+
+      updateScale();
+      const timeoutId = setTimeout(updateScale, 0);
+
+      const resizeObserver = new ResizeObserver(updateScale);
+      if (posterContainerRef.current) {
+        resizeObserver.observe(posterContainerRef.current);
+      }
+      window.addEventListener('resize', updateScale);
+
+      return () => {
+        clearTimeout(timeoutId);
+        resizeObserver.disconnect();
+        window.removeEventListener('resize', updateScale);
+      };
+    }, []);
+
     const isRegistered = registeredWebinars.has(webinar._id);
     const isDeadlinePassed = webinar.deadline && new Date() > new Date(webinar.deadline);
     const isWithinOneWeek = webinar.deadline && (new Date(webinar.deadline) - new Date()) <= (7 * 24 * 60 * 60 * 1000) && (new Date(webinar.deadline) - new Date()) > 0;
@@ -699,7 +713,7 @@ const [userLoading, setUserLoading] = useState(true);
     console.log('Rendering WebinarCard for webinar:', webinar.title, 'userEmail:', userEmail, 'isCoordinator:', isCoordinator, 'isAdmin:', isAdmin, 'canUpload:', canUpload);
 
     return (
-      <div className="webinar1-card">
+      <div className="webinar1-card webinar-event-card">
         {/* Upload Button - Only visible to coordinators and admins */}
         {canUpload && (
           <button
@@ -712,9 +726,9 @@ const [userLoading, setUserLoading] = useState(true);
         )}
 
         {/* Card Content - Horizontal Layout */}
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div className="webinar-card-content-row">
           {/* Left Side - Poster */}
-          <div style={{ flexShrink: 0, backgroundColor: '#f3f4f6', borderRadius: '8px', overflow: 'hidden', width: '230px', height: '352px' }}>
+          <div className="webinar-poster-box" ref={posterContainerRef}>
             <div
               style={{
                 transform: `scaleX(${posterScale.scaleX}) scaleY(${posterScale.scaleY})`,
@@ -722,6 +736,7 @@ const [userLoading, setUserLoading] = useState(true);
               }}
             >
               <WebinarPoster
+                desktopPreview
                 alumniPhoto={webinar.speaker?.photo || null}
                 webinarTopic={webinar.title}
                 webinarDate={new Date(webinar.webinarDate).toLocaleDateString('en-US', {
@@ -742,14 +757,14 @@ const [userLoading, setUserLoading] = useState(true);
           </div>
 
           {/* Right Side - Content */}
-          <div className="flex-1 flex flex-col min-h-[200px]">
+          <div className="webinar-card-body">
             {/* Title and Badge */}
             <div className="mb-2">
-              <h3 className="text-3xl font-bold text-purple-900 mb-2 pr-8">{webinar.title}</h3>
+              <h3 className="webinar-card-title">{webinar.title}</h3>
             </div>
 
             {/* Info Section */}
-            <div className="space-y-1 mb-3 text-lg flex-1">
+            <div className="webinar-card-info">
               <p className="text-gray-700">
                 <span className="font-semibold">Date & Time:</span> {webinar.slot}
               </p>
@@ -779,7 +794,7 @@ const [userLoading, setUserLoading] = useState(true);
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="webinar-card-actions">
               <button
                 onClick={() => !isRegistered && !isDeadlinePassed && isWithinOneWeek && setSelectedWebinar(webinar)}
                 className={`submit-btn text-sm py-3 px-4 flex-1 ${
@@ -826,7 +841,7 @@ const [userLoading, setUserLoading] = useState(true);
             </div>
           </div>
         </div>
-        <div className="mt-1">
+        <div className="webinar-card-certificate">
           <button
             onClick={() => handleCertificateDownload(webinar)}
             className={`submit-btn text-sm py-2 px-4 w-full ${
@@ -919,6 +934,7 @@ const [userLoading, setUserLoading] = useState(true);
                 <label>Webinar Poster</label>
                 <div className="mt-6 flex justify-center">
                   <WebinarPoster
+                    desktopPreview
                     alumniPhoto={webinar.speaker?.photo || null}
                     webinarTopic={webinar.title}
                     webinarDate={new Date(webinar.webinarDate).toLocaleDateString('en-US', {
@@ -957,7 +973,7 @@ const [userLoading, setUserLoading] = useState(true);
   };
 
   return (
-    <div className="student-form-page">
+    <div className="student-form-page webinar-events-page">
 
       {/* Background Animated Orbs */}
       <div className="background-orbs">
@@ -969,7 +985,6 @@ const [userLoading, setUserLoading] = useState(true);
       {/* Main Container */}
       <div className="form-wrapper">
         <div>
-          <button className="back-btn" onClick={() => navigate("/webinar-dashboard")}>\n            <ArrowLeft className="back-btn-icon" /> Back to Dashboard\n          </button>
           {/* Header */}
           <div className="form-header webinar-events-header">
             <div className="icon-wrapper">
@@ -1003,17 +1018,17 @@ const [userLoading, setUserLoading] = useState(true);
             ) : (
               Object.entries(webinars).map(([month, monthWebinars]) => (
                 <div key={month}>
-                  <div className="flex justify-between items-center mb-4 mt-4">
-                    <h2 className="text-2xl font-bold text-purple-900 webinar-section-title">
+                  <div className="webinar-month-row">
+                    <h2 className="webinar-section-title">
                       {month.charAt(0).toUpperCase() + month.slice(1)} 2025
                     </h2>
                     {(isCoordinator || isAdmin) && (
                       <button className="generate-btn" onClick={() => generateCircular(month)}>Generate Circular</button>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-12 mb-12">
+                  <div className="webinar-events-grid">
                     {monthWebinars.map((wb, i) => (
-                      <WebinarCard key={wb._id || i} webinar={wb} posterScale={posterScale} posterContainerRef={i === 0 ? posterContainerRef : null} />
+                      <WebinarCard key={wb._id || i} webinar={wb} />
                     ))}
                   </div>
                 </div>

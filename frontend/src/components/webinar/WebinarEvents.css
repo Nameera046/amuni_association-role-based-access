@@ -800,3 +800,325 @@
     font-size: 0.8rem;
   }
 }
+
+/* Scoped responsive layout for WebinarEvents.jsx (current markup) */
+.webinar-events-page .webinar-month-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.webinar-events-page .webinar-events-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.webinar-events-page .webinar-event-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 16px;
+  position: relative;
+}
+
+.webinar-events-page .webinar-card-content-row {
+  display: flex;
+  gap: 16px;
+}
+
+.webinar-events-page .webinar-poster-box {
+  flex: 0 0 230px;
+  width: 230px;
+  height: 352px;
+  min-height: 352px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Keep poster at source dimensions; wrapper scaling handles responsive fit */
+.webinar-events-page .webinar-poster-box .webinar-poster {
+  width: 900px !important;
+  height: 1200px !important;
+  max-width: none !important;
+}
+
+.webinar-events-page .webinar-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.webinar-events-page .webinar-card-title {
+  color: #4b3f91;
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 8px 0;
+  padding-right: 32px;
+  overflow-wrap: anywhere;
+}
+
+.webinar-events-page .webinar-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  font-size: 1.06rem;
+  flex: 1;
+}
+
+.webinar-events-page .webinar-card-actions .submit-btn,
+.webinar-events-page .webinar-card-certificate .submit-btn {
+  font-size: 0.92rem;
+  padding: 10px 12px;
+}
+
+.webinar-events-page .webinar-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.webinar-events-page .webinar-card-certificate {
+  margin-top: 6px;
+}
+
+.webinar-events-page .generate-btn {
+  width: auto;
+  min-width: 180px;
+}
+
+/* Keep eye button inside webinar card (override Common.css global rule) */
+.webinar-events-page .view-details-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  left: auto;
+  width: 34px;
+  height: 34px;
+  padding: 6px;
+  border-radius: 10px;
+  z-index: 20;
+}
+
+/* Hide page scrollbar for WebinarEvents while keeping scroll functionality */
+html.webinar-events-hide-scrollbar,
+body.webinar-events-hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html.webinar-events-hide-scrollbar::-webkit-scrollbar,
+body.webinar-events-hide-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Desktop: center only events area, keep full page background/layout */
+@media (min-width: 1200px) {
+  .webinar-events-page .webinar-month-row {
+    max-width: 1160px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .webinar-events-page .webinar-events-grid {
+    max-width: 1160px;
+    margin-left: auto;
+    margin-right: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: center;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .webinar-events-page .webinar-events-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .webinar-events-page .webinar-poster-box {
+    flex-basis: 190px;
+    width: 190px;
+    height: 300px;
+  }
+
+  .webinar-events-page .webinar-card-title {
+    font-size: 1.4rem;
+  }
+
+  .webinar-events-page .webinar-card-info {
+    font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .webinar-events-page .webinar-month-row {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .webinar-events-page .generate-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .webinar-events-page .webinar-card-content-row {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .webinar-events-page .webinar-poster-box {
+    flex: 0 0 42%;
+    width: 42%;
+    max-width: 230px;
+    min-width: 135px;
+    height: auto;
+    aspect-ratio: 230 / 352;
+    min-height: 206px;
+    margin: 0;
+    align-self: flex-start;
+  }
+
+  .webinar-events-page .webinar-card-title {
+    font-size: 1.05rem;
+    padding-right: 24px;
+  }
+
+  .webinar-events-page .webinar-card-info {
+    font-size: 0.82rem;
+    gap: 2px;
+    margin-bottom: 8px;
+  }
+
+  .webinar-events-page .webinar-card-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .webinar-events-page .webinar-card-actions .submit-btn {
+    flex: 1 1 48%;
+    font-size: 0.8rem;
+    padding: 8px 10px;
+  }
+
+  .webinar-events-page .back-btn {
+    position: static;
+    left: auto;
+    top: auto;
+    width: auto;
+    height: auto;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .webinar-events-page .back-btn .back-btn-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .webinar-events-page .webinar-month-row {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .webinar-events-page .webinar-section-title {
+    text-align: left;
+    width: auto;
+    margin: 0;
+  }
+
+  .webinar-events-page .webinar-card-content-row {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .webinar-events-page .webinar-event-card {
+    padding: 10px;
+    border-radius: 1.25rem;
+  }
+
+  .webinar-events-page .webinar-card-title {
+    font-size: 0.8rem;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .webinar-events-page .webinar-card-info {
+    font-size: 0.66rem;
+    flex: 0 0 auto;
+    gap: 2px;
+    margin-bottom: 6px;
+  }
+
+  .webinar-events-page .webinar-poster-box {
+    flex-basis: 44%;
+    width: 44%;
+    min-width: 130px;
+    max-width: 165px;
+    height: auto;
+    aspect-ratio: 230 / 352;
+    min-height: 200px;
+    align-self: flex-start;
+  }
+
+  .webinar-events-page .view-details-button {
+    left: auto;
+    right: 8px;
+    top: 8px;
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+  }
+
+  .webinar-events-page .generate-btn {
+    width: auto;
+    min-width: 0;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    align-self: auto;
+    margin: 0;
+  }
+
+  .webinar-events-page .webinar-card-actions {
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
+    gap: 10px;
+  }
+
+  .webinar-events-page .webinar-card-actions .submit-btn {
+    width: 100%;
+    flex: none;
+    font-size: 0.68rem;
+    padding: 7px 8px;
+  }
+
+  .webinar-events-page .webinar-card-certificate .submit-btn {
+    font-size: 0.68rem;
+    padding: 7px 8px;
+  }
+
+  .webinar-events-page .back-btn {
+    padding: 5px 8px;
+    font-size: 0.78rem;
+  }
+}
