@@ -9,7 +9,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import Popup from './Popup';
 import './Common.css';
 
@@ -18,6 +18,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function StudentRequestForm() {
   const { email: encodedEmail } = useParams();
+  const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -36,20 +37,23 @@ export default function StudentRequestForm() {
   const [phaseLoading, setPhaseLoading] = useState(true);
   const [domainOptions, setDomainOptions] = useState([]);
 
-  // Extract email from URL and set in formData
+  // Extract email from URL (query or param), decode safely, and set in formData
   useEffect(() => {
-    if (encodedEmail) {
-      try {
-        const email = atob(encodedEmail);
-        setFormData(prev => ({
-          ...prev,
-          email: email
-        }));
-      } catch (error) {
-        console.error('Error decoding email:', error);
-      }
+    const fallbackFromSearch = window.location.search.match(/[?&]email=([^&]+)/)?.[1];
+    const rawEncodedEmail = searchParams.get('email') || encodedEmail || fallbackFromSearch;
+    if (!rawEncodedEmail) return;
+
+    try {
+      const normalized = decodeURIComponent(rawEncodedEmail);
+      const email = atob(normalized);
+      setFormData(prev => ({
+        ...prev,
+        email
+      }));
+    } catch (error) {
+      console.error('Error decoding email:', error);
     }
-  }, [encodedEmail]);
+  }, [encodedEmail, searchParams]);
 
   // -------------------------------------------------
   // 🔥 Auto-fill: Name + Contact + Department by Email
@@ -142,15 +146,14 @@ export default function StudentRequestForm() {
       }
     } else if (name === 'reason') {
       // Apply validation: Allow English letters, numbers, spaces, and specific punctuation: ., !, ?, ', ", (, ), -. Block emojis, other languages, line breaks, multi-line paste.
-      const maxLength = 500;
-      const minLength = 30;
+      const maxLength = 150;
       const filteredValue = value.replace(/[^\w\s.,!?'"()-]/g, '').slice(0, maxLength);
       setFormData(prev => ({
         ...prev,
         [name]: filteredValue
       }));
       // Clear error if now valid
-      if (filteredValue.length >= minLength && filteredValue.length <= maxLength) {
+      if (filteredValue.length <= maxLength) {
         setErrors(prev => ({
           ...prev,
           [name]: undefined
@@ -183,8 +186,7 @@ export default function StudentRequestForm() {
     else if (formData.topic.length < 10) newErrors.topic = 'Topic must be at least 10 characters long';
     else if (formData.topic.length > 150) newErrors.topic = 'Topic must not exceed 150 characters';
     if (!formData.reason) newErrors.reason = 'Reason is required';
-    else if (formData.reason.length < 30) newErrors.reason = 'Reason must be at least 30 characters long';
-    else if (formData.reason.length > 500) newErrors.reason = 'Reason must not exceed 500 characters';
+    else if (formData.reason.length > 150) newErrors.reason = 'Reason must not exceed 150 characters';
 
     setErrors(newErrors);
 

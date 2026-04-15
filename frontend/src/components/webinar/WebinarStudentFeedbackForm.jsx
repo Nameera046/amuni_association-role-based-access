@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { GraduationCap, User, Mail, ArrowLeft } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { GraduationCap, User, Mail } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import Popup from './Popup';
 import "./Common.css";
 
@@ -8,7 +8,6 @@ import "./Common.css";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export default function WebinarStudentFeedbackForm() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
@@ -20,11 +19,22 @@ export default function WebinarStudentFeedbackForm() {
     q2: "",
     feedback: "",
     phaseId: "",
-    isRobot: false,
   });
 
   const [popup, setPopup] = useState({ show: false, message: '', type: 'success' });
   const [errors, setErrors] = useState({});
+  const MAX_FEEDBACK_CHARS = 150;
+
+  // Keep page scroll but hide vertical scrollbar while this page is open
+  useEffect(() => {
+    document.body.classList.add('webinar-flow-hide-scrollbar');
+    document.documentElement.classList.add('webinar-flow-hide-scrollbar');
+
+    return () => {
+      document.body.classList.remove('webinar-flow-hide-scrollbar');
+      document.documentElement.classList.remove('webinar-flow-hide-scrollbar');
+    };
+  }, []);
 
   const validateFeedback = (value) => {
     const trimmed = value.trim();
@@ -35,13 +45,25 @@ export default function WebinarStudentFeedbackForm() {
     // Check minimum length (1 character)
     if (trimmed.length < 1) return "Feedback must be at least 1 character long";
 
-    // Check maximum length (500 characters)
-    if (trimmed.length > 500) return "Feedback cannot exceed 500 characters";
+    // Check maximum characters
+    if (trimmed.length > MAX_FEEDBACK_CHARS) return `Feedback cannot exceed ${MAX_FEEDBACK_CHARS} characters`;
 
     // Check for line breaks
     if (value.includes('\n') || value.includes('\r')) return "Line breaks are not allowed";
 
     return "";
+  };
+
+  const normalizeAndLimitFeedback = (value) => {
+    const filtered = filterFeedbackInput(value);
+    if (filtered.length <= MAX_FEEDBACK_CHARS) {
+      return { text: filtered, wasTrimmed: false };
+    }
+
+    return {
+      text: filtered.slice(0, MAX_FEEDBACK_CHARS),
+      wasTrimmed: true,
+    };
   };
 
   // Function to filter input - allow English letters, numbers, spaces, punctuation
@@ -109,7 +131,12 @@ export default function WebinarStudentFeedbackForm() {
 
     // Apply input filtering for feedback field
     if (name === 'feedback') {
-      newValue = filterFeedbackInput(value);
+      const { text, wasTrimmed } = normalizeAndLimitFeedback(value);
+      newValue = text;
+
+      if (wasTrimmed) {
+        setErrors(prev => ({ ...prev, feedback: `Feedback cannot exceed ${MAX_FEEDBACK_CHARS} characters` }));
+      }
     }
 
     setFormData((prev) => ({
@@ -126,11 +153,6 @@ export default function WebinarStudentFeedbackForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formData.isRobot) {
-      setPopup({ show: true, message: 'Please verify that you are not a robot', type: 'error' });
-      return;
-    }
 
     const newErrors = {};
 
@@ -182,7 +204,6 @@ export default function WebinarStudentFeedbackForm() {
             q2: "",
             feedback: "",
             phaseId: "",
-            isRobot: false,
           });
         } else {
           setPopup({ show: true, message: data.error || 'Failed to submit feedback', type: 'error' });
@@ -204,10 +225,6 @@ export default function WebinarStudentFeedbackForm() {
 
       <div className="form-wrapper">
         <div >
-          <button className="back-btn" onClick={() => navigate("/webinar-dashboard")}>
-            <ArrowLeft className="back-btn-icon" /> Back to Dashboard
-          </button>
-
           <div className="form-header">
             <div className="icon-wrapper">
               <GraduationCap className="header-icon" />
@@ -327,18 +344,6 @@ export default function WebinarStudentFeedbackForm() {
                   className="textarea-field"
                 ></textarea>
                 {errors.feedback && <div className="error-text">{errors.feedback}</div>}
-              </div>
-
-              {/* Robot Check */}
-              <div className="checkbox-group">
-                <input
-                  type="checkbox"
-                  name="isRobot"
-                  checked={formData.isRobot}
-                  onChange={handleChange}
-                  className="checkbox-field"
-                />
-                <label className="checkbox-label">I'm not a robot</label>
               </div>
 
               <button type="submit" className="submit-btn">

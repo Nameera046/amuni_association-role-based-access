@@ -11,7 +11,7 @@ const coordinatorSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ['student', 'department']
+    enum: ['student', 'department', 'admin']
   },
   name: {
     type: String,

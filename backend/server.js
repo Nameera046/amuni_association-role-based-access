@@ -7,7 +7,7 @@ require('dotenv').config();
 const dotenv = require('dotenv');
 const app = express();
 const PORT = process.env.PORT || 5000;
-app.use(express.json());
+app.use(express.json({ limit: "30mb" }));
 app.use(cors());
 //SSO ROUTES
 const webinarSSORoutes = require('./single-sign-on/routes/webinar');
@@ -80,8 +80,7 @@ const adminRoutes = require('./routes/admin'); // Assuming your admin routes fil
 
 //Cors For Producion
 // app.use(cors({ origin: ["https://necalumni.nec.edu.in", "https://necalumni.nec.edu.in/alumnimain"], credentials: true }));
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "30mb" }));
 
 // uploads folder
 const uploadsDir = path.join(__dirname, "uploads");

@@ -132,10 +132,10 @@ router.post('/assign-speaker', upload.single('speakerPhoto'), async (req, res) =
   try {
     const {
       email, designation, companyName, alumniCity, domain, topic,
-      webinarVenue, meetingLink, slots, phaseId
+      webinarVenue, meetingLink, webinarType, slots, phaseId
     } = req.body;
 
-    console.log('Received data:', { email, designation, companyName, alumniCity, domain, topic, webinarVenue, meetingLink, slots });
+    console.log('Received data:', { email, designation, companyName, alumniCity, domain, topic, webinarVenue, meetingLink, webinarType, slots });
 
     const speakerPhoto = req.file ? req.file.filename : null;
     console.log('Speaker photo:', speakerPhoto);
@@ -150,8 +150,17 @@ router.post('/assign-speaker', upload.single('speakerPhoto'), async (req, res) =
       return res.status(400).json({ error: 'Invalid slots data' });
     }
 
+    const isOnlineWebinar = webinarType === 'Online';
+    const normalizedMeetingLink = isOnlineWebinar
+      ? (meetingLink || '').trim()
+      : 'In Person';
+
     // Validate required fields
-    if (!email || !designation || !companyName || !alumniCity || !domain || !topic || !webinarVenue || !meetingLink || !speakerPhoto) {
+    if (!email || !designation || !companyName || !alumniCity || !domain || !topic || !webinarVenue || !speakerPhoto) {
+      return res.status(400).json({ error: 'All required fields must be provided' });
+    }
+
+    if (isOnlineWebinar && !normalizedMeetingLink) {
       return res.status(400).json({ error: 'All required fields must be provided' });
     }
 
@@ -281,7 +290,7 @@ router.post('/assign-speaker', upload.single('speakerPhoto'), async (req, res) =
       topic,
       webinarVenue,
       alumniCity,
-      meetingLink,
+      meetingLink: normalizedMeetingLink,
       phaseId,
       slots: parsedSlots
     };
@@ -301,7 +310,7 @@ router.post('/assign-speaker', upload.single('speakerPhoto'), async (req, res) =
       topic,
       domain,
       venue: webinarVenue,
-      meetingLink,
+      meetingLink: normalizedMeetingLink,
       alumniCity,
       phaseId
     }));
@@ -362,7 +371,7 @@ router.post('/assign-speaker', upload.single('speakerPhoto'), async (req, res) =
                     <p><strong>Time:</strong> ${slot.time}</p>
                     <p><strong>Registration Deadline:</strong> ${slot.deadline}</p>
                     <p><strong>Venue:</strong> ${webinarVenue}</p>
-                    <p><strong>Meeting Link:</strong> <a href="${meetingLink}">${meetingLink}</a></p>
+                    <p><strong>Meeting Link:</strong> ${normalizedMeetingLink === 'In Person' ? 'Not applicable (In Person webinar)' : `<a href="${normalizedMeetingLink}">${normalizedMeetingLink}</a>`}</p>
                     <hr style="margin: 15px 0;">
                   `).join('')}
                 </div>

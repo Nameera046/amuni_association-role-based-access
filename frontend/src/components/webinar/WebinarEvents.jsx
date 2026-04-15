@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Common.css';
 import './WebinarEvents.css';
@@ -39,6 +39,11 @@ export default function WebinarEvents() {
   const [coordinators, setCoordinators] = useState([]);
   const [userLoading, setUserLoading] = useState(true);
   const [isCoordinator, setIsCoordinator] = useState(false);
+  const isAnyModalOpen =
+    !!selectedWebinar ||
+    !!selectedWebinarForCertificate ||
+    !!showCertificatePreview ||
+    !!showCircularPreview;
 
   // Keep page scroll but hide vertical scrollbar while this page is open
   useEffect(() => {
@@ -162,7 +167,10 @@ export default function WebinarEvents() {
 
       // Set data for preview modal
       setCircularData(tableData);
-      setCircularMonth(month.charAt(0).toUpperCase() + month.slice(1));
+      const monthYearLabel = monthWebinars[0]?.webinarDate
+        ? new Date(monthWebinars[0].webinarDate).toLocaleString('default', { month: 'long', year: 'numeric' })
+        : month.charAt(0).toUpperCase() + month.slice(1);
+      setCircularMonth(monthYearLabel);
       setShowCircularPreview(true);
     } catch (error) {
       console.error('Error preparing circular:', error);
@@ -421,7 +429,8 @@ export default function WebinarEvents() {
 
       // Generate and download the document
       const blob = await Packer.toBlob(doc);
-      saveAs(blob, `Webinar_Circular_${circularMonth}_2025.docx`);
+      const safeMonth = String(circularMonth || 'Circular').replace(/\s+/g, '_');
+      saveAs(blob, `Webinar_Circular_${safeMonth}.docx`);
 
       setPopup({ show: true, message: 'Circular downloaded successfully!', type: 'success' });
       setShowCircularPreview(false);
@@ -462,6 +471,7 @@ export default function WebinarEvents() {
         setRegisteredWebinars(prev => new Set([...prev, selectedWebinar._id]));
         // Refetch webinars to get updated registration count
         fetchWebinars();
+        fetchUserRegistrations(registrationEmail || userEmail);
         setRegistrationEmail('');
         setSelectedWebinar(null);
       } else {
@@ -569,8 +579,12 @@ export default function WebinarEvents() {
         }
 
         // Transform data to match component structure
+        const rawMeetingLink = String(webinar.meetingLink || '').trim();
+        const resolvedJoinLink = /^https?:\/\//i.test(rawMeetingLink) ? rawMeetingLink : '';
+
         acc[month].push({
           _id: webinar._id,
+          phaseId: webinar.phaseId,
           title: webinar.topic,
           slot: `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${year}, ${webinar.time}`,
           formattedDeadline: webinar.deadline ? new Date(webinar.deadline).toLocaleDateString('en-US', {
@@ -595,7 +609,8 @@ export default function WebinarEvents() {
           deadline: webinar.deadline,
           time: webinar.time,
           venue: webinar.venue,
-          meetingLink: webinar.meetingLink,
+          meetingLink: rawMeetingLink,
+          joinLink: resolvedJoinLink,
           alumniCity: webinar.alumniCity
         });
 
@@ -609,6 +624,28 @@ export default function WebinarEvents() {
       setError('Failed to load webinars. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserRegistrations = async (email) => {
+    if (!email) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/registrations/user/${encodeURIComponent(email)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user registrations');
+      }
+
+      const registrations = await response.json();
+      const registeredIds = new Set(
+        (registrations || [])
+          .map((item) => item?.webinarId)
+          .filter(Boolean)
+          .map((id) => String(id))
+      );
+      setRegisteredWebinars(registeredIds);
+    } catch (err) {
+      console.error('Error fetching user registrations:', err);
     }
   };
 
@@ -662,8 +699,25 @@ export default function WebinarEvents() {
   useEffect(() => {
     if (userEmail) {
       setRegistrationEmail(userEmail);
+      fetchUserRegistrations(userEmail);
     }
   }, [userEmail]);
+
+  const phaseWebinars = useMemo(() => {
+    if (!currentPhase?.phaseId) return {};
+
+    const filtered = {};
+    Object.entries(webinars).forEach(([month, monthWebinars]) => {
+      const inCurrentPhase = monthWebinars.filter(
+        (wb) => Number(wb.phaseId) === Number(currentPhase.phaseId)
+      );
+      if (inCurrentPhase.length > 0) {
+        filtered[month] = inCurrentPhase;
+      }
+    });
+
+    return filtered;
+  }, [webinars, currentPhase]);
 
   /** ------------------ Webinar Card ------------------ */
   const WebinarCard = ({ webinar }) => {
@@ -702,13 +756,14 @@ export default function WebinarEvents() {
       };
     }, []);
 
-    const isRegistered = registeredWebinars.has(webinar._id);
+    const isRegistered = registeredWebinars.has(String(webinar._id));
     const isDeadlinePassed = webinar.deadline && new Date() > new Date(webinar.deadline);
     const isWithinOneWeek = webinar.deadline && (new Date(webinar.deadline) - new Date()) <= (7 * 24 * 60 * 60 * 1000) && (new Date(webinar.deadline) - new Date()) > 0;
     const isFeedbackEnabled = webinar.webinarDate && new Date() > new Date(new Date(webinar.webinarDate).getTime() + 24 * 60 * 60 * 1000);
     const isCertificateEnabled = webinar.attendedCount > 0;
     const isCoordinator = coordinators.some(coord => coord.email === userEmail);
     const canUpload = isCoordinator || isAdmin;
+    const isOnlineLink = Boolean(webinar.joinLink);
 
     console.log('Rendering WebinarCard for webinar:', webinar.title, 'userEmail:', userEmail, 'isCoordinator:', isCoordinator, 'isAdmin:', isAdmin, 'canUpload:', canUpload);
 
@@ -779,9 +834,9 @@ export default function WebinarEvents() {
               </p>
               <p className="text-gray-700">
                 <span className="font-semibold">Join:</span>{" "}
-                {webinar.meetingLink ? (
+                {isOnlineLink ? (
                   <a
-                    href={webinar.meetingLink}
+                    href={webinar.joinLink}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-purple-600 hover:text-purple-800 underline"
@@ -789,7 +844,7 @@ export default function WebinarEvents() {
                     Click Here
                   </a>
                 ) : (
-                  <span className="text-gray-500">{webinar.venue || 'Offline'}</span>
+                  <span className="text-gray-500">In Person</span>
                 )}
               </p>
             </div>
@@ -824,7 +879,7 @@ export default function WebinarEvents() {
                     return;
                   }
                   navigate(
-                    `/student-feedback?webinarId=${webinar._id}&topic=${encodeURIComponent(
+                    `/8?webinarId=${webinar._id}&topic=${encodeURIComponent(
                       webinar.title
                     )}&speaker=${encodeURIComponent(
                       webinar.speaker.name
@@ -858,15 +913,15 @@ export default function WebinarEvents() {
 
   /** ------------------ Webinar Detail Modal ------------------ */
   const WebinarDetail = ({ webinar, onClose }) => {
-    const isRegistered = registeredWebinars.has(webinar._id);
+    const isRegistered = registeredWebinars.has(String(webinar._id));
     const isDeadlinePassed = webinar.deadline && new Date() > new Date(webinar.deadline);
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-5 z-50">
         <div className="bg-gradient-to-br from-purple-50/70 via-pink-50/70 to-blue-50/70
                         rounded-2xl max-w-4xl w-full shadow-2xl relative overflow-y-auto
-                        max-h-[90vh] hide-scrollbar p-8">
-          <div className="flex justify-end mt-4">
+                        max-h-[90vh] webinar-modal-scroll-hidden p-8">
+          <div className="flex justify-end">
             <button
               onClick={onClose}
               className="text-purple-900 hover:text-purple-800 text-2xl font-bold"
@@ -973,7 +1028,7 @@ export default function WebinarEvents() {
   };
 
   return (
-    <div className="student-form-page webinar-events-page">
+    <div className={`student-form-page webinar-events-page ${isAnyModalOpen ? 'modal-open' : ''}`}>
 
       {/* Background Animated Orbs */}
       <div className="background-orbs">
@@ -1011,16 +1066,18 @@ export default function WebinarEvents() {
               </button>
             </div>
           ) : (
-            Object.keys(webinars).length === 0 ? (
+            Object.keys(phaseWebinars).length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-lg text-gray-600">No webinars available at the moment.</p>
+                <p className="text-lg text-gray-600">No webinars available for the current phase.</p>
               </div>
             ) : (
-              Object.entries(webinars).map(([month, monthWebinars]) => (
+              Object.entries(phaseWebinars).map(([month, monthWebinars]) => (
                 <div key={month}>
                   <div className="webinar-month-row">
                     <h2 className="webinar-section-title">
-                      {month.charAt(0).toUpperCase() + month.slice(1)} 2025
+                      {monthWebinars[0]?.webinarDate
+                        ? new Date(monthWebinars[0].webinarDate).toLocaleString('default', { month: 'long', year: 'numeric' })
+                        : month.charAt(0).toUpperCase() + month.slice(1)}
                     </h2>
                     {(isCoordinator || isAdmin) && (
                       <button className="generate-btn" onClick={() => generateCircular(month)}>Generate Circular</button>
@@ -1048,8 +1105,8 @@ export default function WebinarEvents() {
         <div className="fixed inset-0 bg-white/85 bg-opacity-30 flex items-center justify-center p-5 z-50">
           <div className="bg-gradient-to-br from-purple-50/70 via-pink-50/70 to-blue-50/70
                           rounded-2xl max-w-md w-full shadow-2xl relative overflow-y-auto
-                          max-h-[90vh] hide-scrollbar p-8">
-            <div className="flex justify-end mt-4">
+                          max-h-[90vh] webinar-modal-scroll-hidden p-8">
+            <div className="flex justify-end">
               <button
                 onClick={() => {
                   setShowCertificateModal(false);
@@ -1117,7 +1174,7 @@ export default function WebinarEvents() {
         <div className="fixed inset-0 bg-white/85 bg-opacity-30 flex items-center justify-center p-5 z-50">
           <div className="bg-gradient-to-br from-purple-50/70 via-pink-50/70 to-blue-50/70
                           rounded-2xl max-w-5xl w-full shadow-2xl relative overflow-y-auto
-                          max-h-[90vh] hide-scrollbar p-8">
+                          max-h-[90vh] webinar-modal-scroll-hidden p-8">
             <div className="flex justify-end mt-4 max-w-5xl">
               <button
                 onClick={() => {
@@ -1158,7 +1215,7 @@ export default function WebinarEvents() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-5 z-50">
           <div className="bg-gradient-to-br from-purple-50/70 via-pink-50/70 to-blue-50/70
                           rounded-2xl max-w-5xl w-full shadow-2xl relative overflow-y-auto
-                          max-h-[90vh] hide-scrollbar p-8">
+                          max-h-[90vh] webinar-modal-scroll-hidden p-8">
             <div className="flex justify-end mt-4 max-w-5xl">
               <button
                 onClick={() => {
@@ -1177,7 +1234,7 @@ export default function WebinarEvents() {
               </div>
               <h1 className="form-title">Webinar Circular Preview</h1>
               <p className="form-title flex justify-center mb-6">
-                {circularMonth} 2025 Webinar Schedule
+                {circularMonth} Webinar Schedule
               </p>
             </div>
 

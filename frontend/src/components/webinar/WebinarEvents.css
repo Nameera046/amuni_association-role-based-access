@@ -907,6 +907,23 @@
   z-index: 20;
 }
 
+/* Hide scrollbar in webinar modals while preserving scroll */
+.webinar-events-page .webinar-modal-scroll-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.webinar-events-page .webinar-modal-scroll-hidden::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Lock background scroll when modal is open */
+.webinar-events-page.modal-open,
+.webinar-events-page.modal-open .form-wrapper {
+  overflow: hidden !important;
+}
+
 /* Hide page scrollbar for WebinarEvents while keeping scroll functionality */
 html.webinar-events-hide-scrollbar,
 body.webinar-events-hide-scrollbar {

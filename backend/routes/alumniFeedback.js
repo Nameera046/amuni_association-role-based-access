@@ -68,20 +68,35 @@ router.post('/alumni-feedback', async (req, res) => {
     // Get the AlumniFeedback model from app locals (webinar connection)
     const AlumniFeedback = req.app.locals.AlumniFeedback;
 
-    // Check if user is registered for this webinar
+    // Validate that the logged-in alumni is the assigned speaker and webinar date is over
     const Webinar = req.app.locals.Webinar;
-    const Register = req.app.locals.Register;
+    const webinars = await Webinar.find({ topic: webinarTopic })
+      .populate('speaker', 'email')
+      .sort({ webinarDate: -1 });
 
-    // Find the webinar by topic to get webinarId
-    const webinar = await Webinar.findOne({ topic: webinarTopic });
-    if (!webinar) {
+    if (!webinars || webinars.length === 0) {
       return res.status(400).json({ message: 'Webinar not found' });
     }
 
-    // Check if user is registered for this webinar
-    const registration = await Register.findOne({ email, webinarId: webinar._id });
-    if (!registration) {
-      return res.status(400).json({ message: 'You must be registered for this webinar to submit feedback' });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const matchedWebinar = webinars.find((webinar) => {
+      const speakerEmail = String(webinar?.speaker?.email || '').trim().toLowerCase();
+      if (!speakerEmail || speakerEmail !== normalizedEmail) return false;
+
+      const webinarDate = webinar?.webinarDate ? new Date(webinar.webinarDate) : null;
+      if (!webinarDate || Number.isNaN(webinarDate.getTime())) return false;
+
+      const webinarDay = new Date(webinarDate.getFullYear(), webinarDate.getMonth(), webinarDate.getDate());
+      return webinarDay <= todayStart;
+    });
+
+    if (!matchedWebinar) {
+      return res.status(400).json({
+        message: 'You can submit alumni feedback only for your webinars after the webinar date is over'
+      });
     }
 
     // Check if feedback already exists for this email and webinar topic

@@ -955,3 +955,16 @@
   max-width: 950px;
   margin: 0 auto;
 }
+
+/* Hide page scrollbar while preserving scroll functionality */
+html.webinar-flow-hide-scrollbar,
+body.webinar-flow-hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html.webinar-flow-hide-scrollbar::-webkit-scrollbar,
+body.webinar-flow-hide-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

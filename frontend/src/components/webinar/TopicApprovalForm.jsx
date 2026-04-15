@@ -202,7 +202,7 @@ export default function TopicApprovalForm() {
 
           {/* Table */}
           <div className="overflow-x-auto rounded-lg topic-approval-scroll-wrap" style={{ maxWidth: '80%', margin: '0 auto' }}>
-            <table className="w-full topic-approval-table" style={{ borderCollapse: 'separate', borderSpacing: 0, tableLayout: 'fixed', backgroundColor: 'transparent', fontSize: '1.1rem' }}>
+            <table className="w-full topic-approval-table" style={{ borderCollapse: 'separate', borderSpacing: '0 10px', tableLayout: 'fixed', backgroundColor: 'transparent', fontSize: '1.1rem' }}>
               <thead className="bg-gradient-to-r from-purple-600 to-blue-500">
                 <tr>
                   <th className="px-6 py-5 text-left text-2xl font-semibold text-white uppercase tracking-wide" style={{ width: '25%' }}>DOMAIN</th>

@@ -126,10 +126,10 @@ const WebinarCompletedDetailsForm = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Check file size (2MB limit)
-      const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+      // Check file size (25MB limit)
+      const maxSize = 25 * 1024 * 1024; // 25MB in bytes
       if (file.size > maxSize) {
-        setErrors(prev => ({ ...prev, attendanceFile: "File size must be less than 2MB" }));
+        setErrors(prev => ({ ...prev, attendanceFile: "File size must be less than 25MB" }));
         setAttendanceFile(null);
         setAttendanceData([]);
         return;

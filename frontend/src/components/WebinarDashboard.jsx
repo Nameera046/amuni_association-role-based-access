@@ -374,7 +374,12 @@ function DashboardShell() {
         .then(response => response.json())
         .then(coordinators => {
           setCoordinators(coordinators);
-          const isAdmin = coordinators.some(c => c.email.toLowerCase().trim() === email.toLowerCase().trim()) || email.toLowerCase().trim() === 'anithait@nec.edu.in';
+          const normalizedEmail = email.toLowerCase().trim();
+          const isAdmin = coordinators.some(
+            coord =>
+              coord?.email?.toLowerCase().trim() === normalizedEmail &&
+              coord?.role === 'admin'
+          ) || normalizedEmail === 'anithait@nec.edu.in';
           setIsAdmin(isAdmin);
           localStorage.setItem('isAdmin', isAdmin.toString());
         })
@@ -856,6 +861,13 @@ function DashboardShell() {
 
   const paged = paginate(tableData, page, pageSize);
   const totalPages = Math.max(1, Math.ceil(tableData.length / pageSize));
+  const normalizedUserEmail = (userEmail || '').toLowerCase().trim();
+  const isCoordinatorUser = coordinators.some(
+    c => c?.email?.toLowerCase().trim() === normalizedUserEmail
+  );
+  const isSpeakerUser = speakers.some(
+    speaker => speaker?.email?.toLowerCase().trim() === normalizedUserEmail
+  );
 
   return (
     <div className={`wb-root ${collegeTheme === 'college' ? 'theme-college' : ''}`}>
@@ -889,7 +901,7 @@ function DashboardShell() {
                 Overall Report
               </button>
             )}
-            {(!isAdmin || coordinators.some(c => c.email === userEmail)) && (
+            {(!isAdmin || isCoordinatorUser) && (
               <div className="phase-menu-row">
                 <select
                   className="phase-select"
@@ -939,7 +951,7 @@ function DashboardShell() {
             <div>
               <div>
                 <br></br>
-{(!isAdmin || coordinators.some(c => c.email === userEmail)) && 
+{(!isAdmin || isCoordinatorUser) && 
                 (
                   <div className="webinar-subtitle">
                     {phaseLoading ? 'Loading current phase...' : `Current Phase: ${currentPhase}`}
@@ -1091,7 +1103,7 @@ function DashboardShell() {
   <h3 className="qa-title">Quick Actions</h3>
 
   <div className="qa-grid">
-  {speakers.length === 0 || !speakers.some(speaker => speaker.email.toLowerCase() === userEmail.toLowerCase()) && (
+  {(speakers.length === 0 || !isSpeakerUser) && (
     <div className="qa-card" onClick={() => {
       if (!userEmail) {
         alert("Please log in first");
@@ -1121,7 +1133,7 @@ function DashboardShell() {
           Join our webinar event to learn, engage, and gain valuable insights from experts.
         </p>
     </div>
-  {(coordinators.some(coord => coord.email === userEmail) || isAdmin) && (
+  {(isCoordinatorUser || isAdmin) && (
     <div className="qa-card" onClick={() => {
       if (!userEmail) {
         alert("Please log in first");
@@ -1137,7 +1149,7 @@ function DashboardShell() {
       </p>
     </div>
   )}
-  {(coordinators.some(coord => coord.email === userEmail) || isAdmin) && (
+  {(isCoordinatorUser || isAdmin) && (
     <div className="qa-card" onClick={() => {
       if (!userEmail) {
         alert("Please log in first");
@@ -1153,13 +1165,13 @@ function DashboardShell() {
         </p>
     </div>
   )}
-  {speakers.length > 0 && speakers.some(speaker => speaker.email.toLowerCase() === userEmail.toLowerCase()) && (
+  {(isAdmin || isSpeakerUser) && (
     <div className="qa-card" onClick={() => {
       if (!userEmail) {
         alert("Please log in first");
         return;
       }
-      navigate(`/8?email=${encodeURIComponent(btoa(userEmail))}`);
+      navigate(`/webinar-alumni-feedback/${encodeURIComponent(btoa(userEmail))}`);
     }} style={{ cursor: "pointer" }}>
         <div className="qa-icon">🏫</div>
         <h4 className="qa-heading">Alumni Feedback Form</h4>

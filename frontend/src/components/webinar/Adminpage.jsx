@@ -29,10 +29,15 @@ const Adminpage = ({ userEmail }) => {
   const [activeCoordinatorView, setActiveCoordinatorView] = useState(null);
   const [showAddStudentForm, setShowAddStudentForm] = useState(false);
   const [showAddDepartmentForm, setShowAddDepartmentForm] = useState(false);
+  const [showAddAdminForm, setShowAddAdminForm] = useState(false);
   const [studentEmail, setStudentEmail] = useState('');
   const [studentCoordinatorData, setStudentCoordinatorData] = useState({ name: '', department: '', phoneNumber: '' });
   const [studentCoordinatorLoading, setStudentCoordinatorLoading] = useState(false);
   const [studentEmailError, setStudentEmailError] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminCoordinatorData, setAdminCoordinatorData] = useState({ name: '', department: '', phoneNumber: '' });
+  const [adminCoordinatorLoading, setAdminCoordinatorLoading] = useState(false);
+  const [adminEmailError, setAdminEmailError] = useState('');
   const [deptCoordinator, setDeptCoordinator] = useState({ name: '', email: '', department: '', phoneNumber: '' });
   const [deptCoordinatorLoading, setDeptCoordinatorLoading] = useState(false);
   const [deptCoordinatorErrors, setDeptCoordinatorErrors] = useState({ name: '', email: '', department: '', phoneNumber: '' });
@@ -424,6 +429,103 @@ const Adminpage = ({ userEmail }) => {
       console.error('Error adding student coordinator:', error);
       setStudentEmailError('An error occurred while adding the student coordinator.');
       document.querySelector('input[placeholder="Enter student email to fetch details"]').focus();
+    }
+  };
+
+  // Handle admin email change with validation and auto-fetch
+  const handleAdminEmailChange = async (email) => {
+    setAdminEmail(email);
+    setAdminEmailError('');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && !emailRegex.test(email)) {
+      setAdminEmailError('Please enter a valid email address.');
+      setAdminCoordinatorData({ name: '', department: '', phoneNumber: '' });
+      return;
+    }
+
+    if (!email.trim()) {
+      setAdminCoordinatorData({ name: '', department: '', phoneNumber: '' });
+      return;
+    }
+
+    setAdminCoordinatorLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/coordinators/member-by-email?email=${encodeURIComponent(email.trim())}`);
+      const data = await response.json();
+
+      if (data.found) {
+        setAdminCoordinatorData({
+          name: data.name || '',
+          department: data.department || '',
+          phoneNumber: data.contact_no || ''
+        });
+        setAdminEmailError('');
+      } else {
+        setAdminCoordinatorData({ name: '', department: '', phoneNumber: '' });
+        setAdminEmailError('Email not found in member database. Please enter a valid registered email.');
+      }
+    } catch (error) {
+      console.error('Error fetching admin details:', error);
+      setAdminCoordinatorData({ name: '', department: '', phoneNumber: '' });
+      setAdminEmailError('Error fetching admin details. Please try again.');
+    } finally {
+      setAdminCoordinatorLoading(false);
+    }
+  };
+
+  // Handle adding admin coordinator
+  const handleAddAdminCoordinator = async () => {
+    setAdminEmailError('');
+
+    if (!adminEmail.trim()) {
+      setAdminEmailError('Email is required.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(adminEmail.trim())) {
+      setAdminEmailError('Please enter a valid email address.');
+      return;
+    }
+
+    if (!adminCoordinatorData.name) {
+      setAdminEmailError('Please enter a valid registered email to fetch admin details.');
+      return;
+    }
+
+    const existingCoordinator = coordinators.find(coord =>
+      coord.email.toLowerCase() === adminEmail.trim().toLowerCase() && coord.role === 'admin'
+    );
+    if (existingCoordinator) {
+      setAdminEmailError('This admin is already registered.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/coordinators/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: adminEmail.trim(), role: 'admin' }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('Admin added successfully!');
+        setAdminEmail('');
+        setAdminCoordinatorData({ name: '', department: '', phoneNumber: '' });
+        setAdminEmailError('');
+        setShowAddAdminForm(false);
+        fetchCoordinators();
+      } else {
+        setAdminEmailError(result.message || 'Failed to add admin.');
+      }
+    } catch (error) {
+      console.error('Error adding admin:', error);
+      setAdminEmailError('An error occurred while adding the admin.');
     }
   };
 
@@ -926,8 +1028,9 @@ const Adminpage = ({ userEmail }) => {
           <div className="form-card">
             <h2 className="form-title" style={{ fontSize: '1.5rem', marginBottom: '1rem', textAlign: 'center' }}>Coordinators Management</h2>
             <div className="admin-buttons coord-switch-buttons" style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                <button className={`submit1-btn ${activeCoordinatorView === 'student' ? 'active' : ''}`} onClick={() => { setActiveCoordinatorView('student'); setShowAddDepartmentForm(false); setShowAddStudentForm(false); }}>Student Coordinators</button>
-                <button className={`submit1-btn ${activeCoordinatorView === 'department' ? 'active' : ''}`} onClick={() => { setActiveCoordinatorView('department'); setShowAddStudentForm(false); setShowAddDepartmentForm(false); }}>Department Coordinators</button>
+                <button className={`submit1-btn ${activeCoordinatorView === 'student' ? 'active' : ''}`} onClick={() => { setActiveCoordinatorView('student'); setShowAddDepartmentForm(false); setShowAddStudentForm(false); setShowAddAdminForm(false); }}>Student Coordinators</button>
+                <button className={`submit1-btn ${activeCoordinatorView === 'department' ? 'active' : ''}`} onClick={() => { setActiveCoordinatorView('department'); setShowAddStudentForm(false); setShowAddDepartmentForm(false); setShowAddAdminForm(false); }}>Department Coordinators</button>
+                <button className={`submit1-btn ${activeCoordinatorView === 'admin' ? 'active' : ''}`} onClick={() => { setActiveCoordinatorView('admin'); setShowAddStudentForm(false); setShowAddDepartmentForm(false); setShowAddAdminForm(false); }}>Admin Management</button>
             </div>
             {activeCoordinatorView === 'student' && (
                 <div>
@@ -1226,6 +1329,153 @@ const Adminpage = ({ userEmail }) => {
                         coordinators.filter(coord => coord.role === 'department').map((coord, index) => (
                           <div key={index} className="coordinator-mobile-card">
                             <div><strong>Faculty Name:</strong> {coord.name || 'N/A'}</div>
+                            <div><strong>Email:</strong> {coord.email || 'N/A'}</div>
+                            <div><strong>Department:</strong> {coord.department || 'N/A'}</div>
+                            <div><strong>Phone Number:</strong> {coord.phoneNumber || 'N/A'}</div>
+                            <button
+                              className="coordinator-delete-btn"
+                              onClick={() => handleDeleteCoordinator(coord._id, coord.name)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                </div>
+            )}
+
+            {activeCoordinatorView === 'admin' && (
+                <div>
+                    <div className="coordinator-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3 className="coordinator-title" style={{fontWeight: "bold" , fontSize: '30px' ,margin: 0}}>Admin Users</h3>
+                        <button className="submit2-btn" onClick={() => setShowAddAdminForm(!showAddAdminForm)}>Add Admin</button>
+                    </div>
+
+                    {showAddAdminForm && (
+                        <div className="form-fields" style={{ background: '#f0f0f0', padding: '1rem', borderRadius: '8px' }}>
+                            <div className="form-group">
+                                <label>Admin Email</label>
+                                <input
+                                    type="email"
+                                    placeholder="Enter admin email to fetch details"
+                                    className={`input-field ${adminEmailError ? 'error' : ''}`}
+                                    value={adminEmail}
+                                    onChange={(e) => handleAdminEmailChange(e.target.value)}
+                                    disabled={adminCoordinatorLoading}
+                                />
+                                {adminEmailError && (
+                                    <div className="error-text">{adminEmailError}</div>
+                                )}
+                                {adminCoordinatorLoading && (
+                                    <span style={{ marginLeft: '10px', color: '#666' }}>Fetching admin details...</span>
+                                )}
+                            </div>
+
+                            {adminCoordinatorData.name && (
+                                <div className="form-group">
+                                    <label>Admin Name</label>
+                                    <input
+                                        type="text"
+                                        className="input-field"
+                                        value={adminCoordinatorData.name}
+                                        readOnly
+                                        style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                                    />
+                                </div>
+                            )}
+
+                            {adminCoordinatorData.department && (
+                                <div className="form-group">
+                                    <label>Department</label>
+                                    <input
+                                        type="text"
+                                        className="input-field"
+                                        value={adminCoordinatorData.department}
+                                        readOnly
+                                        style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                                    />
+                                </div>
+                            )}
+
+                            {adminCoordinatorData.phoneNumber && (
+                                <div className="form-group">
+                                    <label>Phone Number</label>
+                                    <input
+                                        type="text"
+                                        className="input-field"
+                                        value={adminCoordinatorData.phoneNumber}
+                                        readOnly
+                                        style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                                    />
+                                </div>
+                            )}
+
+                            <button
+                                className="submit-btn"
+                                onClick={handleAddAdminCoordinator}
+                                disabled={adminCoordinatorLoading || !!adminEmailError || !adminCoordinatorData.name}
+                            >
+                                Add
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="table-scroll-wrap coordinator-table-desktop">
+                      <table className="admin-data-table coordinator-table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                          <thead>
+                              <tr style={{ backgroundColor: '#eee' }}>
+                                  <th style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>Admin Name</th>
+                                  <th style={{ padding: '15px', border: '1px solid #ddd', textAlign: 'center' }}>Email</th>
+                                  <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>Department</th>
+                                  <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>Phone Number</th>
+                                  <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>Actions</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {coordinatorsLoading ? (
+                                  <tr>
+                                      <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                                          Loading admins...
+                                      </td>
+                                  </tr>
+                              ) : coordinators.filter(coord => coord.role === 'admin').length === 0 ? (
+                                  <tr>
+                                      <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                                          No admins found
+                                      </td>
+                                  </tr>
+                              ) : (
+                                  coordinators.filter(coord => coord.role === 'admin').map((coord, index) => (
+                                      <tr key={index}>
+                                          <td style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>{coord.name || 'N/A'}</td>
+                                          <td style={{ padding: '15px', border: '1px solid #ddd', textAlign: 'center' }}>{coord.email || 'N/A'}</td>
+                                          <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>{coord.department || 'N/A'}</td>
+                                          <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>{coord.phoneNumber || 'N/A'}</td>
+                                          <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>
+                                              <button
+                                                  className="coordinator-delete-btn"
+                                                  onClick={() => handleDeleteCoordinator(coord._id, coord.name)}
+                                              >
+                                                  Delete
+                                              </button>
+                                          </td>
+                                      </tr>
+                                  ))
+                              )}
+                          </tbody>
+                      </table>
+                    </div>
+
+                    <div className="coordinator-mobile-cards">
+                      {coordinatorsLoading ? (
+                        <div className="coordinator-mobile-empty">Loading admins...</div>
+                      ) : coordinators.filter(coord => coord.role === 'admin').length === 0 ? (
+                        <div className="coordinator-mobile-empty">No admins found</div>
+                      ) : (
+                        coordinators.filter(coord => coord.role === 'admin').map((coord, index) => (
+                          <div key={index} className="coordinator-mobile-card">
+                            <div><strong>Admin Name:</strong> {coord.name || 'N/A'}</div>
                             <div><strong>Email:</strong> {coord.email || 'N/A'}</div>
                             <div><strong>Department:</strong> {coord.department || 'N/A'}</div>
                             <div><strong>Phone Number:</strong> {coord.phoneNumber || 'N/A'}</div>

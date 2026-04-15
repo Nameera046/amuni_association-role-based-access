@@ -302,7 +302,12 @@ export default function WebinarSpeakerAssignmentForm() {
       formDataToSend.append('domain', formData.domain);
       formDataToSend.append('topic', formData.topic);
       formDataToSend.append('webinarVenue', formData.webinarVenue.trim());
-      formDataToSend.append('meetingLink', formData.meetingLink.trim());
+      const normalizedMeetingLink =
+        formData.webinarType === 'Online'
+          ? formData.meetingLink.trim()
+          : 'In Person';
+      formDataToSend.append('meetingLink', normalizedMeetingLink);
+      formDataToSend.append('webinarType', formData.webinarType);
       formDataToSend.append('speakerPhoto', formData.speakerPhoto);
       formDataToSend.append('phaseId', formData.phaseId);
       formDataToSend.append('slots', JSON.stringify(slots));

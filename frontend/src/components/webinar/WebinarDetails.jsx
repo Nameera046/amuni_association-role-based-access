@@ -2,7 +2,7 @@ import React, { useState, useEffect } from  'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import './Common.css';
 import { FiBookOpen } from "react-icons/fi";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import WebinarCompletedDetailsForm from './WebinarCompletedDetailsForm';
 import ConfirmationDialog from './ConfirmationDialog';
 import Popup from './Popup';
@@ -32,7 +32,7 @@ export default function WebinarDetails() {
       if (response.ok) {
         setPopup({ message: 'Webinar deleted successfully!', type: 'success' });
         setTimeout(() => {
-          navigate(`/webinar-events/${encodeURIComponent(userEmail)}`);
+          navigate(`/4?email=${encodeURIComponent(userEmail)}`);
         }, 2000);
       } else {
         setPopup({ message: 'Failed to delete webinar.', type: 'error' });
@@ -275,10 +275,6 @@ export default function WebinarDetails() {
       {/* Main Container */}
       <div className="form-wrapper">
         <div>
-          <button className="back-btn" onClick={() => navigate(`/webinar-events/${encodeURIComponent(userEmail)}`)}>
-            <ArrowLeft className="back-btn-icon" /> Back to Webinar Events
-          </button>
-
           {/* Header */}
           <div className="form-header">
             <div className="icon-wrapper">

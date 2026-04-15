@@ -1,5 +1,5 @@
-import { User, Mail, GraduationCap, MessageSquare, ArrowLeft } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { User, Mail, GraduationCap, MessageSquare } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./Common.css";
 import Popup from './Popup';
@@ -8,7 +8,6 @@ import Popup from './Popup';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const WebinarAlumniFeedbackForm = () => {
-  const navigate = useNavigate();
   const { email: encodedEmail } = useParams();
 
   const [formData, setFormData] = useState({
@@ -18,7 +17,6 @@ const WebinarAlumniFeedbackForm = () => {
     rating1: "",
     rating2: "",
     feedback: "",
-    isRobot: false,
   });
 
   const [errors, setErrors] = useState({});
@@ -42,20 +40,34 @@ const WebinarAlumniFeedbackForm = () => {
     }
   }, [encodedEmail]);
 
-  // Fetch webinars from topic approvals
+  // Fetch only attended webinars for this alumni speaker
   useEffect(() => {
+    if (!formData.email) {
+      setWebinars([]);
+      return;
+    }
+
     const fetchWebinars = async () => {
       setWebinarsLoading(true);
       setWebinarsError(null);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/topic-approvals`);
+        const res = await fetch(`${API_BASE_URL}/api/webinars`);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         const data = await res.json();
-        // Extract topics from the response
-        const topics = data.map(item => item.topic);
-        setWebinars(topics);
+        const normalizedEmail = formData.email.trim().toLowerCase();
+        const now = new Date();
+
+        const speakerAttendedWebinars = (Array.isArray(data) ? data : []).filter((item) => {
+          const speakerEmail = String(item?.speaker?.email || "").trim().toLowerCase();
+          const webinarDate = item?.webinarDate ? new Date(item.webinarDate) : null;
+          const isPastWebinar = webinarDate instanceof Date && !isNaN(webinarDate) && webinarDate <= now;
+          return speakerEmail === normalizedEmail && isPastWebinar;
+        });
+
+        const uniqueTopics = [...new Set(speakerAttendedWebinars.map((item) => item.topic).filter(Boolean))];
+        setWebinars(uniqueTopics);
       } catch (err) {
         console.error("Error fetching webinars:", err);
         setWebinarsError(err.message);
@@ -65,7 +77,7 @@ const WebinarAlumniFeedbackForm = () => {
     };
 
     fetchWebinars();
-  }, []);
+  }, [formData.email]);
 
   // 🔥 Auto-fill Name when email entered
   useEffect(() => {
@@ -101,15 +113,14 @@ const WebinarAlumniFeedbackForm = () => {
     const { name, value, type, checked } = e.target;
     if (name === 'feedback') {
       // Apply validation: Allow English letters, numbers, spaces, punctuation. Block emojis, other languages, line breaks, multi-line paste.
-      const maxLength = 500;
-      const minLength = 30;
+      const maxLength = 150;
       const filteredValue = value.replace(/[^\x20-\x7E]/g, '').slice(0, maxLength);
       setFormData(prev => ({
         ...prev,
         [name]: filteredValue
       }));
       // Clear error if now valid
-      if (filteredValue.length >= minLength && filteredValue.length <= maxLength) {
+      if (filteredValue.length <= maxLength) {
         setErrors(prev => ({
           ...prev,
           [name]: undefined
@@ -134,17 +145,11 @@ const WebinarAlumniFeedbackForm = () => {
   const handleSubmit = async () => {
     const newErrors = {};
 
-    if (!formData.isRobot) {
-      setPopup({ show: true, message: 'Please verify that you are not a robot', type: 'error' });
-      return;
-    }
-
     if (!formData.webinar) newErrors.webinar = "Webinar selection is required";
     if (!formData.rating1) newErrors.rating1 = "Rating for arrangements is required";
     if (!formData.rating2) newErrors.rating2 = "Rating for student involvement is required";
     if (!formData.feedback) newErrors.feedback = "Feedback is required";
-    else if (formData.feedback.length < 30) newErrors.feedback = "Feedback must be at least 30 characters long";
-    else if (formData.feedback.length > 500) newErrors.feedback = "Feedback must not exceed 500 characters";
+    else if (formData.feedback.length > 150) newErrors.feedback = "Feedback must not exceed 150 characters";
 
     setErrors(newErrors);
 
@@ -178,12 +183,15 @@ const WebinarAlumniFeedbackForm = () => {
             rating1: "",
             rating2: "",
             feedback: "",
-            isRobot: false,
           });
           setErrors({});
         } else {
           const errorData = await response.json();
-          setPopup({ show: true, message: errorData.message || 'Failed to submit feedback. Please try again.', type: 'error' });
+          const backendMessage = errorData.message || 'Failed to submit feedback. Please try again.';
+          const mappedMessage = backendMessage.includes('You must be registered for this webinar to submit feedback')
+            ? 'Only the assigned speaker can submit feedback, after the webinar date.'
+            : backendMessage;
+          setPopup({ show: true, message: mappedMessage, type: 'error' });
         }
       } catch (error) {
         console.error('Error submitting feedback:', error);
@@ -202,11 +210,6 @@ const WebinarAlumniFeedbackForm = () => {
 
       <div className="form-wrapper">
         <div>
-
-          <button className="back-btn" onClick={() => navigate("/webinar-dashboard")}>
-            <ArrowLeft className="back-btn-icon" /> <span className="back-btn-text">Back to Dashboard</span>
-          </button>
-
           <div className="form-header">
             <div className="icon-wrapper">
               <GraduationCap className="header-icon" />
@@ -262,10 +265,16 @@ const WebinarAlumniFeedbackForm = () => {
                   value={formData.webinar}
                   onChange={handleChange}
                   className="select-field"
-                  disabled={webinarsLoading}
+                  disabled={webinarsLoading || webinars.length === 0}
                 >
                   <option value="" disabled>
-                    {webinarsLoading ? 'Loading webinars...' : webinarsError ? 'Error loading webinars' : '-- Choose Webinar --'}
+                    {webinarsLoading
+                      ? 'Loading webinars...'
+                      : webinarsError
+                      ? 'Error loading webinars'
+                      : webinars.length === 0
+                      ? 'No attended webinars found'
+                      : '-- Choose Webinar --'}
                   </option>
                   {webinars.map((topic, index) => (
                     <option key={index} value={topic}>{topic}</option>
@@ -329,18 +338,6 @@ const WebinarAlumniFeedbackForm = () => {
                   className="textarea-field"
                 ></textarea>
                 {errors.feedback && <div className="error-text">{errors.feedback}</div>}
-              </div>
-
-              {/* CAPTCHA */}
-              <div className="checkbox-group">
-                <input
-                  type="checkbox"
-                  name="isRobot"
-                  checked={formData.isRobot}
-                  onChange={handleChange}
-                  className="checkbox-field"
-                />
-                <label className="checkbox-label">I'm not a robot</label>
               </div>
 
               {/* SUBMIT */}

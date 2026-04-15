@@ -70,8 +70,8 @@ router.post('/add', async (req, res) => {
     }
 
     // Validate role
-    if (!['student', 'department'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role. Must be either "student" or "department"' });
+    if (!['student', 'department', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role. Must be "student", "department", or "admin"' });
     }
 
     // Check if coordinator already exists
@@ -136,8 +136,8 @@ router.get('/role/:role', async (req, res) => {
   try {
     const { role } = req.params;
 
-    if (!['student', 'department'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role. Must be either "student" or "department"' });
+    if (!['student', 'department', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role. Must be "student", "department", or "admin"' });
     }
 
     const coordinators = await req.Coordinator.find({ role }).sort({ createdAt: -1 });
